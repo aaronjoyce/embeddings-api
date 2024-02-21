@@ -4,6 +4,9 @@ from fastapi import Response
 
 from .models import GetEmbeddingsResponse
 from .models import CreateEmbeddingsResponse
+from .models import CreateEmbeddingsDataIn
+
+from .service import create_cloudflare_embedding
 
 router = APIRouter(prefix="/embeddings")
 
@@ -14,6 +17,12 @@ async def get(request: Request, response: Response):
 
 
 @router.post("/{namespace}", response_model=CreateEmbeddingsResponse)
-async def post(namespace: str, request: Request, response: Response):
+async def post(namespace: str, data_in: CreateEmbeddingsDataIn, request: Request, response: Response):
     print(("namespace", namespace))
+    print(("data_in", data_in, ))
+    res = create_cloudflare_embedding(
+        model="@cf/baai/bge-base-en-v1.5",
+        text=data_in.text
+    )
+    print(("res", res))
     return CreateEmbeddingsResponse()

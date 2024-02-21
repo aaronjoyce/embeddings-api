@@ -4,7 +4,7 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "embeddings-api"
+    PROJECT_NAME: str = "embeddings"
 
     PROJECT_DESCRIPTION: Optional[str] = None
 

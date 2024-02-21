@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "embeddings-api"
+name = "embeddings"
 version = "0.1.0"
 description = ""
 authors = ["Aaron Joyce <joyceaa@tcd.ie>"]
