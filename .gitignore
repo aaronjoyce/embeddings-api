@@ -1,0 +1,13 @@
+### macOS ###
+# General
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Environments
+env/
+venv/
+.env
+
+# Misc
+.idea
