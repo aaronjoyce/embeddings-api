@@ -1,3 +1,4 @@
+import traceback
 from typing import Optional
 from fastapi import APIRouter
 from fastapi import Request
@@ -10,6 +11,7 @@ from http import HTTPStatus
 from .models import CreateNamespaceResponse
 from .models import CreateNamespacePayload
 from .models import RetrieveNamespaceData
+from .models import DeleteNamespaceResponse
 
 from qdrant_client.http.models import Distance, VectorParams
 from qdrant_client.async_qdrant_client import AsyncQdrantClient
@@ -64,7 +66,33 @@ async def get(namespace: str, request: Request, response: Response):
         "vectors_count": result.vectors_count,
         "points_count": result.points_count
     }
-    print(("retrieve.collection.data", data))
     return RetrieveNamespaceData(
        **data
+    )
+
+
+@router.delete("/{namespace}", response_model=DeleteNamespaceResponse)
+async def delete(namespace: str, request: Request, response: Response):
+    try:
+        deletion_res = await client.delete_collection(
+            collection_name=namespace
+        )
+        print(("deletion_res", deletion_res))
+    except UnexpectedResponse as ex:
+        print(traceback.format_exc())
+        if ex.status_code == status.HTTP_404_NOT_FOUND:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=[{"msg": f"The namespace {namespace} you provided does not exist"}]
+            )
+
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=[{"msg": ex.content.decode('utf-8')}]
+        )
+    except Exception as ex:
+        print(traceback.format_exc())
+
+    return DeleteNamespaceResponse(
+        success=True
     )

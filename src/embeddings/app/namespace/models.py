@@ -21,6 +21,10 @@ class CreateNamespaceResponse(BaseModel):
     success: bool
 
 
+class DeleteNamespaceResponse(BaseModel):
+    success: bool
+
+
 class RetrieveNamespaceData(RetrieveNamespaceBaseModel):
     dimensionality: int
     distance: Distance

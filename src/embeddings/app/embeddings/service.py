@@ -12,9 +12,12 @@ API_BASE_URL = "https://api.cloudflare.com/client/v4/accounts/{account_id}/ai/ru
 def create_cloudflare_embedding(model: CloudflareEmbeddingModels, text: List[str]):
     headers = {"Authorization": f"Bearer {settings.CLOUDFLARE_API_TOKEN}"}
 
-    res = requests.post(API_BASE_URL.format(
+    uri = API_BASE_URL.format(
         account_id=settings.CLOUDFLARE_API_ACCOUNT_ID,
         model=model
-    ), headers=headers, json={"text": text})
-    print(("res", res))
+    )
+    print(("uri.2", uri, "headers", headers))
+
+    res = requests.post(uri, headers=headers, json={"text": text})
+    print(("res.0", res))
     return res.json()
