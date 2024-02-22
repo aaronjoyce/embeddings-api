@@ -1,3 +1,5 @@
+from enum import Enum
+
 from fastapi import APIRouter
 from fastapi import Request
 from fastapi import Response
@@ -7,6 +9,8 @@ from .models import CreateEmbeddingsResponse
 from .models import CreateEmbeddingsDataIn
 
 from .service import create_cloudflare_embedding
+
+from .enums import CloudflareEmbeddingModels
 
 router = APIRouter(prefix="/embeddings")
 
@@ -21,7 +25,7 @@ async def post(namespace: str, data_in: CreateEmbeddingsDataIn, request: Request
     print(("namespace", namespace))
     print(("data_in", data_in, ))
     res = create_cloudflare_embedding(
-        model="@cf/baai/bge-base-en-v1.5",
+        model=CloudflareEmbeddingModels.BAAIBase,
         text=data_in.text
     )
     print(("res", res))
