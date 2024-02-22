@@ -7,8 +7,6 @@ from fastapi import Request
 from fastapi import Response
 from fastapi import HTTPException
 
-from .models import GetEmbeddingsResponse
-from .models import CreateEmbeddingsResponse
 from .models import EmbeddingRead
 from .models import EmbeddingsCreate
 from .models import EmbeddingPagination
