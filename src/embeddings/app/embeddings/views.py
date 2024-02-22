@@ -26,3 +26,4 @@ async def post(namespace: str, data_in: CreateEmbeddingsDataIn, request: Request
     )
     print(("res", res))
     return CreateEmbeddingsResponse()
+
