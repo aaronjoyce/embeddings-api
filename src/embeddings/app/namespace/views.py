@@ -2,24 +2,12 @@ from fastapi import APIRouter
 from fastapi import Request
 from fastapi import Response
 
-from pydantic import BaseModel
-from pydantic import Field
+from .models import CreateNamespaceResponse
+from .models import CreateNamespacePayload
+from .models import RetrieveNamespaceResponse
 
 
 router = APIRouter(prefix="/namespace")
-
-
-class CreateNamespacePayload(BaseModel):
-    name: str
-    dimensions: int = Field(default=1024)
-
-
-class CreateNamespaceResponse(BaseModel):
-    success: bool
-
-
-class RetrieveNamespaceResponse(BaseModel):
-    name: str
 
 
 @router.post("", response_model=CreateNamespaceResponse)
