@@ -103,9 +103,6 @@ def run():
     res = query(namespace=NAMESPACE_NAME, inputs="some sample text")
     print(("namespace.query.res", res, ))
 
-    res = delete_namespace(name=NAMESPACE_NAME)
-    print(("namespace.delete.res", res))
-
 
 if __name__ == "__main__":
     run()

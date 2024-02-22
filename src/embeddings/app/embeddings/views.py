@@ -19,7 +19,7 @@ from qdrant_client.models import Filter
 from embeddings.app.deps.request_params import CommonParams
 
 
-from embeddings.app.lib.cloudflare import embed as cloudflare_embed
+from embeddings.app.lib.cloudflare import aembed as cloudflare_embed
 
 from embeddings.app.config import CloudflareEmbeddingModels
 from embeddings.app.config import settings
@@ -84,7 +84,7 @@ async def post(namespace: str, data_in: EmbeddingsCreate, request: Request, resp
             detail=[{"msg": ex.content.decode('utf-8')}]
         )
 
-    result = cloudflare_embed(
+    result = await cloudflare_embed(
         model=CloudflareEmbeddingModels.BAAIBase.value,
         text=data_in.text
     )

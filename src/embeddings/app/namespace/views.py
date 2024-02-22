@@ -22,7 +22,7 @@ from embeddings.app.config import settings
 
 from embeddings.app.config import CloudflareEmbeddingModels
 
-from embeddings.app.lib.cloudflare import embed as cloudflare_embed
+from embeddings.app.lib.cloudflare import aembed as cloudflare_aembed
 
 from embeddings.app.deps.request_params import CommonParams
 
@@ -44,7 +44,7 @@ async def create(data_in: NamespaceCreate, request: Request, response: Response)
 
 @router.post("/{namespace}/query", response_model=DocumentPagination)
 async def query(namespace: str, payload: NamespaceQuery, common: CommonParams, request: Request, response: Response):
-    embedded_query_result = cloudflare_embed(model=CloudflareEmbeddingModels.BAAIBase.value, text=[payload.inputs])
+    embedded_query_result = await cloudflare_aembed(model=CloudflareEmbeddingModels.BAAIBase.value, text=[payload.inputs])
     query_vectors = embedded_query_result.get('result', {}).get('data', [])
     query_vector = query_vectors[0]
     query_search_result = await client.search(
