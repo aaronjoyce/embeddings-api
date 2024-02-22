@@ -1,5 +1,3 @@
-from typing import Optional
-
 from pydantic import BaseModel
 from pydantic import Field
 
@@ -7,29 +5,21 @@ from qdrant_client.http.models import Distance
 
 from qdrant_client.http.models import CollectionStatus
 
-from embeddings.app.embeddings.models import EmbeddingPagination
 
-from embeddings.models import Pagination
-
-
-class RetrieveNamespaceBaseModel(BaseModel):
+class NamespaceBaseModel(BaseModel):
     name: str
 
 
-class CreateNamespacePayload(RetrieveNamespaceBaseModel):
+class NamespaceCreate(NamespaceBaseModel):
     dimensionality: int = Field(default=1024)
     distance: Distance = Field(default=Distance.DOT)
 
 
-class CreateNamespaceResponse(BaseModel):
+class NamespaceDelete(BaseModel):
     success: bool
 
 
-class DeleteNamespaceResponse(BaseModel):
-    success: bool
-
-
-class RetrieveNamespaceData(RetrieveNamespaceBaseModel):
+class NamespaceRead(NamespaceBaseModel):
     dimensionality: int
     distance: Distance
     status: CollectionStatus
@@ -40,8 +30,5 @@ class RetrieveNamespaceData(RetrieveNamespaceBaseModel):
     points_count: int
 
 
-class NamespaceQueryPayload(BaseModel):
+class NamespaceQuery(BaseModel):
     inputs: str
-
-class NamespaceQueryResult(Pagination):
-    pass

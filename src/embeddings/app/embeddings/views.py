@@ -19,7 +19,7 @@ from qdrant_client.models import Filter
 from embeddings.app.deps.request_params import CommonParams
 
 
-from embeddings.app.lib.cloudflare import embed
+from embeddings.app.lib.cloudflare import embed as cloudflare_embed
 
 from embeddings.app.config import CloudflareEmbeddingModels
 from embeddings.app.config import settings
@@ -31,9 +31,6 @@ client = AsyncQdrantClient(host=settings.QDRANT_HOST, port=settings.QDRANT_HTTP_
 
 @router.get("/{namespace}/{embedding_id}", response_model=EmbeddingRead)
 async def get_embedding(namespace: str, embedding_id: str, request: Request, response: Response):
-    query_params = request.query_params
-    print(("query_params", query_params))
-
     try:
         result = await client.retrieve(
             collection_name=namespace,
@@ -60,13 +57,11 @@ async def list_embeddings(namespace: str, common: CommonParams, request: Request
         limit=common.get("limit"),
         offset=common.get("offset")
     )
-    print(("points", points, "offset", offset))
     body = {
         "total": len(points),
         "page": common.get("page"),
         "items": [{"id": o.id} for o in points]
     }
-    print(("body", body))
     return EmbeddingPagination(**body)
 
 
@@ -89,11 +84,10 @@ async def post(namespace: str, data_in: EmbeddingsCreate, request: Request, resp
             detail=[{"msg": ex.content.decode('utf-8')}]
         )
 
-    result = embed(
+    result = cloudflare_embed(
         model=CloudflareEmbeddingModels.BAAIBase.value,
         text=data_in.text
     )
-    print(("cloudflare.embed.result", result))
     embedding_vectors = result.get('result', {}).get('data', [])
     if not embedding_vectors:
         raise HTTPException(
