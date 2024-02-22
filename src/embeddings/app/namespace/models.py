@@ -7,6 +7,10 @@ from qdrant_client.http.models import Distance
 
 from qdrant_client.http.models import CollectionStatus
 
+from embeddings.app.embeddings.models import EmbeddingPagination
+
+from embeddings.models import Pagination
+
 
 class RetrieveNamespaceBaseModel(BaseModel):
     name: str
@@ -34,3 +38,10 @@ class RetrieveNamespaceData(RetrieveNamespaceBaseModel):
     write_consistency_factor: int
     vectors_count: int
     points_count: int
+
+
+class NamespaceQueryPayload(BaseModel):
+    inputs: str
+
+class NamespaceQueryResult(Pagination):
+    pass

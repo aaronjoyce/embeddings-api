@@ -18,6 +18,6 @@ RUN curl -sSL https://install.python-poetry.org | POETRY_HOME=/opt/poetry python
 
 RUN poetry install --no-root
 
-COPY ./src/embeddings/ /myapp/
+COPY ./src/ /myapp/
 
-CMD uvicorn --host 0.0.0.0 --port 8000 main:app --reload
+CMD uvicorn --host 0.0.0.0 --port 8000 embeddings.main:app --reload

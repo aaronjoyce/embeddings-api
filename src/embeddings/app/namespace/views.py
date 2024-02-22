@@ -12,12 +12,22 @@ from .models import CreateNamespaceResponse
 from .models import CreateNamespacePayload
 from .models import RetrieveNamespaceData
 from .models import DeleteNamespaceResponse
+from .models import NamespaceQueryPayload
+
+from embeddings.app.document.models import DocumentPagination
+from embeddings.app.document.models import DocumentRead
 
 from qdrant_client.http.models import Distance, VectorParams
 from qdrant_client.async_qdrant_client import AsyncQdrantClient
 from qdrant_client.http.exceptions import UnexpectedResponse
 
-from app.config import settings
+from embeddings.app.config import settings
+
+from embeddings.app.config import CloudflareEmbeddingModels
+
+from embeddings.app.lib.cloudflare import embed
+
+from embeddings.app.deps.request_params import CommonParams
 
 router = APIRouter(prefix="/namespace")
 
@@ -34,6 +44,28 @@ async def create(data_in: CreateNamespacePayload, request: Request, response: Re
     return CreateNamespaceResponse(
         success=True
     )
+
+
+@router.post("/{namespace}/query", response_model=DocumentPagination)
+async def query(namespace: str, payload: NamespaceQueryPayload, common: CommonParams, request: Request, response: Response):
+    embedded_query_result = embed(model=CloudflareEmbeddingModels.BAAIBase.value, text=[payload.inputs])
+    query_vectors = embedded_query_result.get('result', {}).get('data', [])
+    query_vector = query_vectors[0]
+    query_search_result = await client.search(
+        collection_name=namespace,
+        query_vector=query_vector,
+        offset=common.get("offset"),
+        limit=common.get("limit")
+    )
+    print(("query_search_result", query_search_result))
+
+    data = {
+        "items": [DocumentRead(id=o.id, payload=o.payload, score=o.score, vector=o.vector) for o in query_search_result],
+        "total": len(query_search_result),
+        "page": 1
+    }
+    print(("query_search.data", data))
+    return DocumentPagination(**data)
 
 
 @router.get("/{namespace}", response_model=RetrieveNamespaceData)
@@ -79,7 +111,6 @@ async def delete(namespace: str, request: Request, response: Response):
         )
         print(("deletion_res", deletion_res))
     except UnexpectedResponse as ex:
-        print(traceback.format_exc())
         if ex.status_code == status.HTTP_404_NOT_FOUND:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -90,8 +121,6 @@ async def delete(namespace: str, request: Request, response: Response):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=[{"msg": ex.content.decode('utf-8')}]
         )
-    except Exception as ex:
-        print(traceback.format_exc())
 
     return DeleteNamespaceResponse(
         success=True

@@ -16,10 +16,13 @@ from qdrant_client.http.exceptions import UnexpectedResponse
 from qdrant_client.conversions import common_types
 from qdrant_client.models import Filter
 
-from .service import create_cloudflare_embedding
+from embeddings.app.deps.request_params import CommonParams
 
-from app.config import CloudflareEmbeddingModels
-from app.config import settings
+
+from embeddings.app.lib.cloudflare import embed
+
+from embeddings.app.config import CloudflareEmbeddingModels
+from embeddings.app.config import settings
 
 router = APIRouter(prefix="/embeddings")
 
@@ -51,24 +54,16 @@ async def get_embedding(namespace: str, embedding_id: str, request: Request, res
 
 
 @router.get("/{namespace}", response_model=EmbeddingPagination)
-async def list_embeddings(namespace: str, request: Request, response: Response):
-    query_params = request.query_params
-    print(("query_params", query_params))
-    page = int(query_params.get("page", 1))
-    limit = int(query_params.get("limit", 10))
-
-    offset = (page - 1) * limit
-    print(("offset.1", offset))
-
+async def list_embeddings(namespace: str, common: CommonParams, request: Request, response: Response):
     points, offset = await client.scroll(
         collection_name=namespace,
-        limit=10,
-        offset=offset
+        limit=common.get("limit"),
+        offset=common.get("offset")
     )
     print(("points", points, "offset", offset))
     body = {
         "total": len(points),
-        "page": page,
+        "page": common.get("page"),
         "items": [{"id": o.id} for o in points]
     }
     print(("body", body))
@@ -94,10 +89,11 @@ async def post(namespace: str, data_in: EmbeddingsCreate, request: Request, resp
             detail=[{"msg": ex.content.decode('utf-8')}]
         )
 
-    result = create_cloudflare_embedding(
+    result = embed(
         model=CloudflareEmbeddingModels.BAAIBase.value,
         text=data_in.text
     )
+    print(("cloudflare.embed.result", result))
     embedding_vectors = result.get('result', {}).get('data', [])
     if not embedding_vectors:
         raise HTTPException(

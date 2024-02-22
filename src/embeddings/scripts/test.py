@@ -50,12 +50,14 @@ def list_embeddings(namespace: str, page: int = None, limit: int = None):
     if page is not None:
         params["page"] = page
 
+    print(("embeddings.limit", limit))
     if limit is not None:
         params["limit"] = limit
 
     if params:
-        args["params"] = page
+        args["params"] = params
 
+    print(("list.args", args))
     res = requests.get(**args)
     return res.json()
 
@@ -69,20 +71,37 @@ def get_embedding(namespace: str, embedding_id: str):
     return res.json()
 
 
+def query(namespace: str, inputs: str):
+    uri = url(path=f"/namespace/{namespace}/query")
+    print(("uri", uri))
+    res = requests.post(
+        url=uri,
+        json={
+            "inputs": inputs
+        }
+    )
+    print(("res", res, ))
+    return res.json()
+
+
 def run():
     res = create_namespace(name=NAMESPACE_NAME)
     print(("namespace.create.res", res))
 
-    res = create_embedding(namespace=NAMESPACE_NAME, text=["this is some sample text"])
-    print(("embedding.create.res", res))
+    for i in range(3):
+        res = create_embedding(namespace=NAMESPACE_NAME, text=["this is some sample text"])
+        print((f"embedding.create.res-{i}", res))
 
-    res = list_embeddings(namespace=NAMESPACE_NAME, limit=2)
+    res = list_embeddings(namespace=NAMESPACE_NAME, limit=1, page=1)
     print(("embeddings.list.res", res))
 
     embedding_id = res.get('items', [])[0].get('id')
     print(("embedding_id", embedding_id, ))
     res = get_embedding(namespace=NAMESPACE_NAME, embedding_id=embedding_id)
     print(("embedding.get.res", res))
+
+    res = query(namespace=NAMESPACE_NAME, inputs="some sample text")
+    print(("namespace.query.res", res, ))
 
     res = delete_namespace(name=NAMESPACE_NAME)
     print(("namespace.delete.res", res))

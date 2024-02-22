@@ -2,11 +2,7 @@ from pydantic import BaseModel
 
 from typing import List, Dict, Any, Optional
 
-
-class Pagination(BaseModel):
-    itemsPerPage: Optional[int] = None
-    total: int
-    page: int
+from embeddings.models import Pagination
 
 
 class EmbeddingRead(BaseModel):
