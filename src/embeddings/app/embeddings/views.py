@@ -10,7 +10,7 @@ from .models import CreateEmbeddingsDataIn
 
 from .service import create_cloudflare_embedding
 
-from .enums import CloudflareEmbeddingModels
+from app.config import CloudflareEmbeddingModels
 
 router = APIRouter(prefix="/embeddings")
 

@@ -3,8 +3,7 @@ import requests
 from typing import Literal, List
 
 from app.config import settings
-
-from .enums import CloudflareEmbeddingModels
+from app.config import CloudflareEmbeddingModels
 
 
 API_BASE_URL = "https://api.cloudflare.com/client/v4/accounts/{account_id}/ai/run/{model}"
