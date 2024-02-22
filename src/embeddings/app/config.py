@@ -24,8 +24,8 @@ class Settings(BaseSettings):
 
     # Qdrant
     QDRANT_HOST: str
-    QDRANT_SYNC_PORT: int
-    QDRANT_ASYNC_PORT: int
+    QDRANT_HTTP_PORT: int
+    QDRANT_GRPC_PORT: int
 
 
 settings = Settings()
