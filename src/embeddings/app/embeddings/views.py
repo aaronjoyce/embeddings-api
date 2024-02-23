@@ -24,6 +24,9 @@ from embeddings.app.lib.cloudflare.async_api import aembed as cloudflare_embed
 from embeddings.app.config import CloudflareEmbeddingModels
 from embeddings.app.config import settings
 
+from embeddings.app.lib.cloudflare.api import API
+from embeddings.app.lib.cloudflare.models import VectorPayloadItem
+
 router = APIRouter(prefix="/embeddings")
 
 client = AsyncQdrantClient(host=settings.QDRANT_HOST, port=settings.QDRANT_HTTP_PORT)
@@ -66,7 +69,7 @@ async def list_embeddings(namespace: str, common: CommonParams, request: Request
 
 
 @router.post("/{namespace}", response_model=EmbeddingRead)
-async def post(namespace: str, data_in: EmbeddingsCreate, request: Request, response: Response):
+async def qdrant_post(namespace: str, data_in: EmbeddingsCreate, request: Request, response: Response):
     try:
         # check if the collection exists
         await client.get_collection(
@@ -111,3 +114,26 @@ async def post(namespace: str, data_in: EmbeddingsCreate, request: Request, resp
         id=new_id,
     )
 
+
+@router.post("/cloudflare/{namespace}", response_model=EmbeddingRead)
+async def cloudflare_post(namespace: str, data_in: EmbeddingsCreate, request: Request, response: Response):
+    cloudflare = API(
+        api_token=settings.CLOUDFLARE_MASTER_API_TOKEN,
+        account_id=settings.CLOUDFLARE_API_ACCOUNT_ID
+    )
+    result = cloudflare.embed(
+        model=CloudflareEmbeddingModels.BAAIBase.value,
+        texts=data_in.text
+    )
+    print(("ai.embedded", result))
+
+    query_vectors = result.get('data', [])
+    print(("query_vectors", query_vectors))
+    result = cloudflare.insert_vectors(
+        vector_index_name=namespace,
+        vectors=[VectorPayloadItem(**{"values": o}) for o in query_vectors]
+    )
+    print(("result.vectors.insert", result))
+    return EmbeddingRead(
+        id=data_in.id
+    )
