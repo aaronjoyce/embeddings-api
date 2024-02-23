@@ -1,7 +1,5 @@
 import uuid
 import CloudFlare
-import traceback
-from enum import Enum
 
 from fastapi import status
 from fastapi import APIRouter
