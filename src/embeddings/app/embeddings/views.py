@@ -19,7 +19,7 @@ from qdrant_client.models import Filter
 from embeddings.app.deps.request_params import CommonParams
 
 
-from embeddings.app.lib.cloudflare import aembed as cloudflare_embed
+from embeddings.app.lib.cloudflare.async_api import aembed as cloudflare_embed
 
 from embeddings.app.config import CloudflareEmbeddingModels
 from embeddings.app.config import settings

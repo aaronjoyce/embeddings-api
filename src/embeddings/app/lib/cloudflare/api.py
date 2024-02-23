@@ -1,45 +1,13 @@
-import uuid
 import json
-import aiohttp
 import CloudFlare
 
-from pydantic import BaseModel, Field
-
-from typing import List, Dict, Any, Literal, Optional
-
-from embeddings.app.config import settings
-from embeddings.app.config import CloudflareEmbeddingModels
+from typing import Optional, List
 
 from retry import retry
 
+from embeddings.app.config import settings
 
-AI_WORKER_API_BASE_URL = "https://api.cloudflare.com/client/v4/accounts/{account_id}/ai/run/{model}"
-
-ModelPreset = Literal["@cf/baai/bge-small-en-v1.5", "@cf/baai/bge-base-en-v1.5", "@cf/baai/bge-large-en-v1.5"]
-
-
-class VectorPayloadItem(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    values: List[float]
-    metadata: Dict[str, Any] = {}
-
-
-def auth_headers() -> Dict[str, Any]:
-    return {"Authorization": f"Bearer {settings.CLOUDFLARE_MASTER_API_TOKEN}"}
-
-
-@retry(tries=5, delay=1, backoff=1, jitter=0.5)
-async def aembed(model: CloudflareEmbeddingModels, text: List[str]):
-    uri = AI_WORKER_API_BASE_URL.format(
-        account_id=settings.CLOUDFLARE_API_ACCOUNT_ID,
-        model=model
-    )
-    async with aiohttp.ClientSession() as session:
-        async with session.post(uri, json={
-            "text": text
-        }, headers=auth_headers()) as response:
-            result = await response.json()
-            return result
+from .models import VectorPayloadItem
 
 
 class API:

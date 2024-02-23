@@ -1,8 +1,7 @@
-from embeddings.app.lib.cloudflare import API
-from embeddings.app.lib.cloudflare import VectorPayloadItem
+from embeddings.app.lib.cloudflare.api import API
+from embeddings.app.lib.cloudflare.models import VectorPayloadItem
 
 from embeddings.app.config import settings
-
 
 
 def run():
