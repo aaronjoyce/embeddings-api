@@ -3,7 +3,7 @@ import aiohttp
 from typing import List, Dict, Any
 
 from embeddings.app.config import settings
-from embeddings.app.config import CloudflareEmbeddingModels
+from embeddings.app.lib.cloudflare.api import CloudflareEmbeddingModels
 
 from retry import retry
 

@@ -5,7 +5,13 @@ from pydantic import BaseModel
 from pydantic import Field
 
 
-ModelPreset = Literal["@cf/baai/bge-small-en-v1.5", "@cf/baai/bge-base-en-v1.5", "@cf/baai/bge-large-en-v1.5"]
+ModelPreset = Literal[
+    "@cf/baai/bge-small-en-v1.5",
+    "@cf/baai/bge-base-en-v1.5",
+    "@cf/baai/bge-large-en-v1.5",
+    "openai/text-embedding-ada-002",
+    "cohere/embed-multilingual-v2.0"
+]
 
 
 class VectorPayloadItem(BaseModel):

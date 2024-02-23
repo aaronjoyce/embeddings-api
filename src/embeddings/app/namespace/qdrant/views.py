@@ -20,15 +20,14 @@ from qdrant_client.http.exceptions import UnexpectedResponse
 
 from embeddings.app.config import settings
 
-from embeddings.app.config import CloudflareEmbeddingModels
-
 from embeddings.app.lib.cloudflare.async_api import aembed as cloudflare_aembed
+from embeddings.app.lib.cloudflare.api import CloudflareEmbeddingModels
 
 from embeddings.app.deps.request_params import CommonParams
 
 from .service import namespace as get_namespace
 
-router = APIRouter(prefix="/namespace")
+router = APIRouter(prefix="/namespace/qdrant")
 
 client = AsyncQdrantClient(host=settings.QDRANT_HOST, port=settings.QDRANT_HTTP_PORT)
 

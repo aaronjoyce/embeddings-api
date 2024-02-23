@@ -15,10 +15,9 @@ from qdrant_client.http.exceptions import UnexpectedResponse
 from qdrant_client.conversions import common_types
 from embeddings.app.deps.request_params import CommonParams
 
-
+from embeddings.app.lib.cloudflare.api import CloudflareEmbeddingModels
 from embeddings.app.lib.cloudflare.async_api import aembed as cloudflare_embed
 
-from embeddings.app.config import CloudflareEmbeddingModels
 from embeddings.app.config import settings
 
 router = APIRouter(prefix="/embeddings/qdrant")

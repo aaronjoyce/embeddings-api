@@ -1,4 +1,3 @@
-from qdrant_client.http.exceptions import UnexpectedResponse
 from qdrant_client.async_qdrant_client import AsyncQdrantClient
 
 from embeddings.app.config import settings

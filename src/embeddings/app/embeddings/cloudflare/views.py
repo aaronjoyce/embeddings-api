@@ -11,11 +11,11 @@ from ..models import EmbeddingRead
 from ..models import EmbeddingsCreate
 
 from embeddings.models import InsertionResult
-from embeddings.app.config import CloudflareEmbeddingModels
 from embeddings.app.config import settings
 
 from embeddings.app.lib.cloudflare.api import ERROR_CODE_VECTOR_INDEX_NOT_FOUND
 from embeddings.app.lib.cloudflare.api import API
+from embeddings.app.lib.cloudflare.api import CloudflareEmbeddingModels
 from embeddings.app.lib.cloudflare.models import VectorPayloadItem
 
 router = APIRouter(prefix="/embeddings/cloudflare")
