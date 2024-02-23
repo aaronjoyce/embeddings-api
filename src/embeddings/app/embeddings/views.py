@@ -16,6 +16,8 @@ from qdrant_client.http.exceptions import UnexpectedResponse
 from qdrant_client.conversions import common_types
 from qdrant_client.models import Filter
 
+from embeddings.models import InsertionResult
+
 from embeddings.app.deps.request_params import CommonParams
 
 
@@ -116,7 +118,7 @@ async def qdrant_post(namespace: str, data_in: EmbeddingsCreate, request: Reques
     )
 
 
-@router.post("/cloudflare/{namespace}", response_model=EmbeddingRead)
+@router.post("/cloudflare/{namespace}", response_model=InsertionResult[EmbeddingRead])
 async def cloudflare_post(namespace: str, data_in: EmbeddingsCreate, request: Request, response: Response):
     cloudflare = API(
         api_token=settings.CLOUDFLARE_MASTER_API_TOKEN,
@@ -134,7 +136,6 @@ async def cloudflare_post(namespace: str, data_in: EmbeddingsCreate, request: Re
             vectors=[VectorPayloadItem(**{"values": o}) for o in query_vectors],
             create_on_not_found=data_in.create_index
         )
-        print(("insert vector result", result))
     except CloudFlare.exceptions.CloudFlareAPIError as ex:
         if int(ex) == ERROR_CODE_VECTOR_INDEX_NOT_FOUND:
             raise HTTPException(
@@ -151,6 +152,8 @@ async def cloudflare_post(namespace: str, data_in: EmbeddingsCreate, request: Re
                 detail=[{"msg": str(ex)}]
             )
 
-    return EmbeddingRead(
-        id=data_in.id
+    items = [EmbeddingRead(id=o) for o in result.get('ids', [])]
+    return InsertionResult[EmbeddingRead](
+        count=len(result.get('ids', [])),
+        items=items
     )
