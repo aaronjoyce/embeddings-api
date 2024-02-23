@@ -63,6 +63,17 @@ class API:
         return res
 
     @retry(tries=5, delay=1, backoff=1, jitter=0.5)
+    def vectors_by_ids(self, vector_index_name: str, ids: List[str]):
+        res = self.client.accounts.vectorize.indexes.get_by_ids.post(
+            settings.CLOUDFLARE_API_ACCOUNT_ID,
+            vector_index_name,
+            data={
+                "ids": ids
+            }
+        )
+        return res
+
+    @retry(tries=5, delay=1, backoff=1, jitter=0.5)
     def insert_vectors(self, vector_index_name: str, vectors: List[VectorPayloadItem], create_on_not_found: bool = False):
         data = "\n".join([json.dumps({"id": o.id, "values": o.values, "metadata": o.metadata}) for o in vectors])
         try:

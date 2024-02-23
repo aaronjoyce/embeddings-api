@@ -12,6 +12,13 @@ def run():
     res = api.list_vector_indexes()
     print(("vector.indexes.list", res))
 
+    vectors = api.vectors_by_ids(
+        vector_index_name='test20',
+        ids=['dc1b67f7-3287-4241-ac67-6db02a9145bc']
+    )
+    print(("vectors", vectors))
+    exit()
+
     # res = api.create_vector_index(
     #     name="test4",
     #     preset="@cf/baai/bge-large-en-v1.5"

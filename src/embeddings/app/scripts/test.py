@@ -32,9 +32,9 @@ def create_namespace(name: str, dimensionality: int = 768):
     return res.json()
 
 
-def create_embedding(namespace: str, text: List[str]):
+def qdrant_create_embedding(namespace: str, text: List[str]):
     res = requests.post(
-        url=url(path="/embeddings", path_id=namespace),
+        url=url(path="/embeddings/qdrant", path_id=namespace),
         json={
             "text": text
         }
@@ -42,21 +42,24 @@ def create_embedding(namespace: str, text: List[str]):
     return res.json()
 
 
-def create_cloudflare_embedding(namespace: str, text: List[str]):
+def cloudflare_create_embedding(namespace: str, text: List[str]):
     res = requests.post(
         url=url(path="/embeddings/cloudflare", path_id=namespace),
         json={
             "text": text,
-            "create_index": True
+            "create_index": True,
+            "persist_decoded": True,
+            "payload": {
+                "test1": 1
+            }
         }
     )
     return res.json()
 
 
-
-def list_embeddings(namespace: str, page: int = None, limit: int = None):
+def qdrant_list_embeddings(namespace: str, page: int = None, limit: int = None):
     args = {
-        "url": url(path="/embeddings", path_id=namespace),
+        "url": url(path="/embeddings/qdrant", path_id=namespace),
     }
     params = {}
     if page is not None:
@@ -74,8 +77,8 @@ def list_embeddings(namespace: str, page: int = None, limit: int = None):
     return res.json()
 
 
-def get_embedding(namespace: str, embedding_id: str):
-    uri = url(path=f"/embeddings/{namespace}", path_id=embedding_id)
+def qdrant_get_embedding(namespace: str, embedding_id: str):
+    uri = url(path=f"/embeddings/qdrant/{namespace}", path_id=embedding_id)
     print(("get_embedding.uri", uri, ))
     res = requests.get(
         url=uri
@@ -97,22 +100,26 @@ def query(namespace: str, inputs: str):
 
 
 def run():
-    res = create_cloudflare_embedding(namespace="test20", text=["this is some sample text"])
-    print(("res", res))
-    exit()
+    insertion_text = ["this is some sample text"]
+    res = cloudflare_create_embedding(namespace="test20", text=insertion_text)
+    print(("cloudflare.embedding.create", res))
+
+    res = delete_namespace(name=NAMESPACE_NAME)
+    print(("qdrant.namespace.delete", res))
+
     res = create_namespace(name=NAMESPACE_NAME)
     print(("namespace.create.res", res))
 
     for i in range(3):
-        res = create_embedding(namespace=NAMESPACE_NAME, text=["this is some sample text"])
+        res = qdrant_create_embedding(namespace=NAMESPACE_NAME, text=insertion_text)
         print((f"embedding.create.res-{i}", res))
 
-    res = list_embeddings(namespace=NAMESPACE_NAME, limit=1, page=1)
+    res = qdrant_list_embeddings(namespace=NAMESPACE_NAME, limit=1, page=1)
     print(("embeddings.list.res", res))
 
     embedding_id = res.get('items', [])[0].get('id')
     print(("embedding_id", embedding_id, ))
-    res = get_embedding(namespace=NAMESPACE_NAME, embedding_id=embedding_id)
+    res = qdrant_get_embedding(namespace=NAMESPACE_NAME, embedding_id=embedding_id)
     print(("embedding.get.res", res))
 
     res = query(namespace=NAMESPACE_NAME, inputs="some sample text")

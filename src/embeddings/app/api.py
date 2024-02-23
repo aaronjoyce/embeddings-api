@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
 
-from .embeddings.views import router as embeddings_router
+from .embeddings.cloudflare.views import router as cloudflare_embeddings_router
+from .embeddings.qdrant.views import router as qdrant_embeddings_router
 from .namespace.views import router as namespace_router
 
 api_router = APIRouter(
@@ -8,7 +9,10 @@ api_router = APIRouter(
 )
 
 api_router.include_router(
-    embeddings_router
+    cloudflare_embeddings_router
+)
+api_router.include_router(
+    qdrant_embeddings_router
 )
 api_router.include_router(
     namespace_router
