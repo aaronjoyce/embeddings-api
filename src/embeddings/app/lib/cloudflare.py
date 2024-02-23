@@ -1,11 +1,11 @@
 import uuid
 import json
 import aiohttp
-import requests
+import CloudFlare
 
 from pydantic import BaseModel, Field
 
-from typing import List, Dict, Any, Literal
+from typing import List, Dict, Any, Literal, Optional
 
 from embeddings.app.config import settings
 from embeddings.app.config import CloudflareEmbeddingModels
@@ -24,12 +24,8 @@ class VectorPayloadItem(BaseModel):
     metadata: Dict[str, Any] = {}
 
 
-def ai_worker_auth_headers() -> Dict[str, Any]:
-    return {"Authorization": f"Bearer {settings.CLOUDFLARE_API_TOKEN}"}
-
-
-def vectorize_auth_headers() -> Dict[str, Any]:
-    return {"Authorization": f"Bearer {settings.CLOUDFLARE_API_VECTORIZE_TOKEN}"}
+def auth_headers() -> Dict[str, Any]:
+    return {"Authorization": f"Bearer {settings.CLOUDFLARE_MASTER_API_TOKEN}"}
 
 
 @retry(tries=5, delay=1, backoff=1, jitter=0.5)
@@ -41,62 +37,59 @@ async def aembed(model: CloudflareEmbeddingModels, text: List[str]):
     async with aiohttp.ClientSession() as session:
         async with session.post(uri, json={
             "text": text
-        }, headers=ai_worker_auth_headers()) as response:
+        }, headers=auth_headers()) as response:
             result = await response.json()
             return result
 
 
-@retry(tries=5, delay=1, backoff=1, jitter=0.5)
-def embed(model: CloudflareEmbeddingModels, text: List[str]):
-    uri = AI_WORKER_API_BASE_URL.format(
-        account_id=settings.CLOUDFLARE_API_ACCOUNT_ID,
-        model=model
-    )
-    res = requests.post(uri, headers=ai_worker_auth_headers(), json={"text": text})
-    return res.json()
+class API:
 
+    def __init__(self, api_token: str, account_id: str):
+        self.api_token = api_token
+        self.account_id = account_id
+        self.client = CloudFlare.CloudFlare(token=self.api_token)
 
-def create_vector_index(name: str, model_preset: ModelPreset):
-    url = "https://api.cloudflare.com/client/v4/accounts/{account_id}/vectorize/indexes".format(
-        account_id=settings.CLOUDFLARE_API_ACCOUNT_ID
-    )
-    headers = {
-        **vectorize_auth_headers()
-    }
-    result = requests.post(
-        url=url,
-        headers=headers,
-        json={
+    @retry(tries=5, delay=1, backoff=1, jitter=0.5)
+    def create_vector_index(self, name: str, preset: str, description: Optional[str] = None):
+        data = {
+            "name": name,
             "config": {
-                "preset": model_preset
-            },
-            "name": name
+                "preset": preset
+            }
         }
-    )
-    return result
+        if description is not None:
+            data["description"] = description
 
+        res = self.client.accounts.vectorize.indexes.post(
+            self.account_id,
+            data=data
+        )
+        return res
 
-def insert_vectors(vector_index_name: str, vectors: List[VectorPayloadItem]):
-    data = "\n".join([json.dumps({"id": o.id, "values": o.values, "metadata": o.metadata}) for o in vectors])
-    url = "https://api.cloudflare.com/client/v4/accounts/{account_id}/vectorize/indexes/{index_name}/insert".format(
-        account_id=settings.CLOUDFLARE_API_ACCOUNT_ID,
-        index_name=vector_index_name
-    )
-    headers = {
-        "Content-Type": "application/x-ndjson",
-        **vectorize_auth_headers()
-    }
-    result = requests.post(url=url, headers=headers, data=data)
-    return result
+    @retry(tries=5, delay=1, backoff=1, jitter=0.5)
+    def list_vector_indexes(self):
+        res = self.client.accounts.vectorize.indexes(
+            self.account_id
+        )
+        return res
 
+    @retry(tries=5, delay=1, backoff=1, jitter=0.5)
+    def insert_vectors(self, vector_index_name: str, vectors: List[VectorPayloadItem]):
+        data = "\n".join([json.dumps({"id": o.id, "values": o.values, "metadata": o.metadata}) for o in vectors])
+        res = self.client.accounts.vectorize.indexes.insert.post(
+            settings.CLOUDFLARE_API_ACCOUNT_ID,
+            vector_index_name,
+            data=data
+        )
+        return res
 
-def list_vector_indexes():
-    url = "https://api.cloudflare.com/client/v4/accounts/{account_identifier}/vectorize/indexes".format(
-        account_identifier=settings.CLOUDFLARE_API_ACCOUNT_ID
-    )
-    headers = vectorize_auth_headers()
-    result = requests.get(
-        url=url,
-        headers=headers
-    )
-    return result
+    @retry(tries=5, delay=1, backoff=1, jitter=0.5)
+    def embed(self, model, texts: List[str]):
+        res = self.client.accounts.ai.run.post(
+            settings.CLOUDFLARE_API_ACCOUNT_ID,
+            model,
+            data={
+                "text": texts
+            }
+        )
+        return res
