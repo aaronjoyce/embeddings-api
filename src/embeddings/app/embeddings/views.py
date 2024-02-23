@@ -1,4 +1,6 @@
 import uuid
+import CloudFlare
+import traceback
 from enum import Enum
 
 from fastapi import status
@@ -24,6 +26,7 @@ from embeddings.app.lib.cloudflare.async_api import aembed as cloudflare_embed
 from embeddings.app.config import CloudflareEmbeddingModels
 from embeddings.app.config import settings
 
+from embeddings.app.lib.cloudflare.api import ERROR_CODE_VECTOR_INDEX_NOT_FOUND
 from embeddings.app.lib.cloudflare.api import API
 from embeddings.app.lib.cloudflare.models import VectorPayloadItem
 
@@ -125,15 +128,31 @@ async def cloudflare_post(namespace: str, data_in: EmbeddingsCreate, request: Re
         model=CloudflareEmbeddingModels.BAAIBase.value,
         texts=data_in.text
     )
-    print(("ai.embedded", result))
-
     query_vectors = result.get('data', [])
-    print(("query_vectors", query_vectors))
-    result = cloudflare.insert_vectors(
-        vector_index_name=namespace,
-        vectors=[VectorPayloadItem(**{"values": o}) for o in query_vectors]
-    )
-    print(("result.vectors.insert", result))
+
+    try:
+        result = cloudflare.insert_vectors(
+            vector_index_name=namespace,
+            vectors=[VectorPayloadItem(**{"values": o}) for o in query_vectors],
+            create_on_not_found=data_in.create_index
+        )
+        print(("insert vector result", result))
+    except CloudFlare.exceptions.CloudFlareAPIError as ex:
+        if int(ex) == ERROR_CODE_VECTOR_INDEX_NOT_FOUND:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=[{
+                    "msg": f"Vector index with name '{namespace}' not found. "
+                    f"Create the index via a separate call or include 'create_index' "
+                    f"in your payload to automagically create and insert"
+                }]
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=[{"msg": str(ex)}]
+            )
+
     return EmbeddingRead(
         id=data_in.id
     )

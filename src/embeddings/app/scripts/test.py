@@ -42,6 +42,18 @@ def create_embedding(namespace: str, text: List[str]):
     return res.json()
 
 
+def create_cloudflare_embedding(namespace: str, text: List[str]):
+    res = requests.post(
+        url=url(path="/embeddings/cloudflare", path_id=namespace),
+        json={
+            "text": text,
+            "create_index": True
+        }
+    )
+    return res.json()
+
+
+
 def list_embeddings(namespace: str, page: int = None, limit: int = None):
     args = {
         "url": url(path="/embeddings", path_id=namespace),
@@ -85,6 +97,9 @@ def query(namespace: str, inputs: str):
 
 
 def run():
+    res = create_cloudflare_embedding(namespace="test20", text=["this is some sample text"])
+    print(("res", res))
+    exit()
     res = create_namespace(name=NAMESPACE_NAME)
     print(("namespace.create.res", res))
 

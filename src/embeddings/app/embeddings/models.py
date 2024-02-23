@@ -21,3 +21,4 @@ class EmbeddingsCreate(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     text: List[str]
     payload: Optional[Dict[str, Any]] = None
+    create_index: Optional[bool] = Field(default=False)

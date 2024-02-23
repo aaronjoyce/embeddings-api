@@ -22,7 +22,7 @@ from embeddings.app.config import settings
 
 from embeddings.app.config import CloudflareEmbeddingModels
 
-from embeddings.app.lib.cloudflare import aembed as cloudflare_aembed
+from embeddings.app.lib.cloudflare.async_api import aembed as cloudflare_aembed
 
 from embeddings.app.deps.request_params import CommonParams
 
