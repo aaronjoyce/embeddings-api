@@ -23,12 +23,12 @@ class NamespaceDelete(BaseModel):
 
 class NamespaceRead(NamespaceBaseModel):
     dimensionality: int
-    shard_number: Optional[int]
-    metric: Optional[Metric]
-    replication_factor: Optional[int]
-    write_consistency_factor: Optional[int]
-    vectors_count: Optional[int]
-    points_count: Optional[int]
+    metric: Metric
+    shard_number: Optional[int] = None
+    replication_factor: Optional[int] = None
+    write_consistency_factor: Optional[int] = None
+    vectors_count: Optional[int] = None
+    points_count: Optional[int] = None
 
 
 class NamespaceQuery(BaseModel):

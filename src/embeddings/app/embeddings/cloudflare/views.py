@@ -41,7 +41,6 @@ async def create(namespace: str, data_in: EmbeddingsCreate, request: Request, re
     else:
         vectors = [VectorPayloadItem(**{"values": o, "metadata": data_in.payload}) for o in query_vectors]
 
-    print(("vectors", vectors))
     try:
         result = cloudflare.insert_vectors(
             vector_index_name=namespace,

@@ -41,11 +41,11 @@ async def create(data_in: NamespaceCreate, request: Request, response: Response)
         name=data_in.name,
         preset=data_in.preset
     )
-    print(("res", res))
+    config = res.get('result', {}).get('config', {})
     return NamespaceRead(
-        name=res.result.name,
-        dimensionality=res.result.config.dimensions,
-        metric=res.result.metric.lower()
+        name=res.get('result', {}).get('name'),
+        dimensionality=config.get('dimensions'),
+        metric=config.get("metric").lower()
     )
 
 
@@ -55,15 +55,22 @@ async def query(namespace: str, payload: NamespaceQuery, common: CommonParams, r
         model=CloudflareEmbeddingModels.BAAIBase.value,
         texts=[payload.inputs]
     )
-    query_vectors = res.get('result', {}).get('data', [])
+    query_vectors = res.get('data', [])
     query_vector = query_vectors[0]
     query_search_result = client.query_vector_index(
         vector_index_name=namespace,
         vector=query_vector
     )
-    matches = query_search_result.matches
+    matches = query_search_result.get('matches', [])
     data = {
-        "items": [DocumentRead(id=o.id, payload=o.metadata, score=o.score, vector=o.values) for o in matches],
+        "items": [
+            DocumentRead(
+                id=o.get('id'),
+                payload=o.get('metadata'),
+                score=o.get('score'),
+                vector=o.get('values')
+            )
+            for o in matches],
         "total": len(query_search_result),
         "page": common.get("page"),
     }
@@ -76,7 +83,6 @@ async def get(namespace: str, request: Request, response: Response):
         res = client.vector_index_by_name(
             namespace
         )
-        print(("vector_index.res", res))
     except CloudFlare.exceptions.CloudFlareAPIError as ex:
         if int(ex) == ERROR_CODE_VECTOR_INDEX_NOT_FOUND:
             raise HTTPException(
@@ -92,19 +98,18 @@ async def get(namespace: str, request: Request, response: Response):
             )
 
     return NamespaceRead(
-        name=res.name,
-        dimensionality=res.config.dimensions,
-        metric=res.config.metric.lower()
+        name=res.get('name'),
+        dimensionality=res.get('config', {}).get('dimensions'),
+        metric=res.get('config').get('metric').lower()
     )
 
 
 @router.delete("/{namespace}", response_model=NamespaceDelete)
 async def delete(namespace: str, request: Request, response: Response):
     try:
-        deletion_res = await client.delete_vector_index_by_name(
+        deletion_res = client.delete_vector_index_by_name(
             name=namespace
         )
-        print(("deletion_res", deletion_res))
     except CloudFlare.exceptions.CloudFlareAPIError as ex:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

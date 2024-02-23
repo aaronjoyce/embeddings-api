@@ -64,7 +64,7 @@ class API:
             "topK": top_k,
             "returnMetadata": include_metadata
         }
-        res = self.client.accounts.vectorize.indexes.query(
+        res = self.client.accounts.vectorize.indexes.query.post(
             self.account_id,
             vector_index_name,
             data=data
@@ -92,11 +92,12 @@ class API:
     @retry(tries=5, delay=1, backoff=1, jitter=0.5)
     def vector_index_by_name(self, name: str):
         try:
-            res = self.client.accounts.vectorize.index(
+            res = self.client.accounts.vectorize.indexes(
                 self.account_id,
                 name
             )
         except CloudFlare.exceptions.CloudFlareAPIError as ex:
+            print(("cloudflare exception!!!", str(ex)))
             raise ex
 
         return res
@@ -104,7 +105,7 @@ class API:
     @retry(tries=5, delay=1, backoff=1, jitter=0.5)
     def delete_vector_index_by_name(self, name: str):
         try:
-            res = self.client.accounts.vectorize.index.delete(
+            res = self.client.accounts.vectorize.indexes.delete(
                 self.account_id,
                 name
             )
