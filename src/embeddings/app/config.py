@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     # Cloudflare
     CLOUDFLARE_API_ACCOUNT_ID: str
     CLOUDFLARE_API_TOKEN: str
+    CLOUDFLARE_API_VECTORIZE_TOKEN: str
 
     # Qdrant
     QDRANT_HOST: str
