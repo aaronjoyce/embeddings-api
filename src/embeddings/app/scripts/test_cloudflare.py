@@ -49,7 +49,9 @@ def query(namespace: str, inputs: str):
     res = requests.post(
         url=uri,
         json={
-            "inputs": inputs
+            "inputs": inputs,
+            "return_vectors": False,
+            "limit": 1
         }
     )
     return res
@@ -64,7 +66,7 @@ def run():
     print(("cloudflare.namespace", res))
 
     res = query(namespace=NAMESPACE_NAME, inputs="sample text")
-    print(("cloudflare.query.res", res, ))
+    print(("cloudflare.query.res", res, res.json()))
 
     res = delete_namespace(name=NAMESPACE_NAME)
     print(("cloudflare.delete", res))

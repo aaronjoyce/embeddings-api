@@ -8,6 +8,7 @@ from embeddings.models import Pagination
 
 class DocumentRead(BaseModel):
     id: str
+    source: str
     payload: Optional[Dict[str, Any]]
     score: Optional[float]
     vector: Optional[VectorStruct]

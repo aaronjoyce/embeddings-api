@@ -4,8 +4,6 @@ from fastapi import Response
 from fastapi import HTTPException
 from fastapi import status
 
-from http import HTTPStatus
-
 from .models import NamespaceCreate
 from .models import NamespaceRead
 from .models import NamespaceDelete
@@ -65,8 +63,8 @@ async def get(namespace: str, request: Request, response: Response):
     try:
         return await get_namespace(namespace)
     except UnexpectedResponse as ex:
-        if ex.status_code == HTTPStatus.NOT_FOUND.value:
-            response.status_code = HTTPStatus.NOT_FOUND.value
+        if ex.status_code == status.HTTP_404_NOT_FOUND:
+            response.status_code = status.HTTP_404_NOT_FOUND
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=[{"msg": f"Collection with name {namespace} not found"}]

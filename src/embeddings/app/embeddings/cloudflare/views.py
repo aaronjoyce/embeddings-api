@@ -41,18 +41,14 @@ async def create(namespace: str, data_in: EmbeddingsCreate, request: Request, re
             vectors=vectors,
             create_on_not_found=data_in.create_index
         )
-        print(("result", result))
-        insertion_records = [CreateDatabaseRecord(source=o[0], vector_id=o[1]) for o in zip(
+        insertion_records = [CreateDatabaseRecord(vector_id=o[0], source=o[1]) for o in zip(
             result.get('ids', []), data_in.text
         )]
-        print(("insertion_records", insertion_records))
-
         insertion_result = cloudflare.upsert_database_table_records(
             database_id=settings.CLOUDFLARE_D1_DATABASE_IDENTIFIER,
             table_name=namespace,
             records=insertion_records
         )
-        print(("insertion_result", insertion_result))
     except CloudFlare.exceptions.CloudFlareAPIError as ex:
         if int(ex) == ERROR_CODE_VECTOR_INDEX_NOT_FOUND:
             raise HTTPException(

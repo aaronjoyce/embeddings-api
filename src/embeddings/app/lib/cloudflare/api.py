@@ -60,12 +60,22 @@ class API:
         return res
 
     @retry(tries=5, delay=1, backoff=1, jitter=0.5)
-    def query_vector_index(self, vector_index_name: str, vector: List[float], top_k: Optional[int] = 5, include_metadata: Optional[bool] = False):
+    def query_vector_index(
+        self,
+        vector_index_name: str,
+        vector: List[float],
+        top_k: Optional[int] = 5,
+        return_vectors: Optional[bool] = False,
+        return_metadata: Optional[bool] = False
+    ):
         data = {
             "vector": vector,
             "topK": top_k,
-            "returnMetadata": include_metadata
+            "returnMetadata": return_metadata
         }
+        if return_vectors:
+            data["returnValues"] = True
+
         res = self.client.accounts.vectorize.indexes.query.post(
             self.account_id,
             vector_index_name,
@@ -99,7 +109,6 @@ class API:
                 name
             )
         except CloudFlare.exceptions.CloudFlareAPIError as ex:
-            print(("cloudflare exception!!!", str(ex)))
             raise ex
 
         return res
@@ -200,6 +209,19 @@ class API:
             database_id,
             data={
                 "sql": f"{create_table_sql} {insertion_sql}"
+            }
+        )
+        return res
+
+    @retry(tries=5, delay=1, backoff=1, jitter=0.5)
+    def database_table_records_by_vector_ids(self, database_id: str, table_name: str, vector_ids: List[str]):
+        formatted_ids = ",".join(["'{}'".format(o) for o in vector_ids])
+        sql = f"""SELECT source, vector_id FROM {table_name} WHERE vector_id IN ({formatted_ids});"""
+        res = self.client.accounts.d1.database.query.post(
+            self.account_id,
+            database_id,
+            data={
+                "sql": sql
             }
         )
         return res

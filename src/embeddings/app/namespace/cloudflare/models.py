@@ -33,3 +33,7 @@ class NamespaceRead(NamespaceBaseModel):
 
 class NamespaceQuery(BaseModel):
     inputs: str
+    return_vectors: Optional[bool] = False
+    return_metadata: Optional[bool] = False
+    limit: Optional[int] = Field(default=5, gt=0)
+
