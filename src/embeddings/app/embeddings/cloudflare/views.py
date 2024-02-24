@@ -17,6 +17,7 @@ from embeddings.app.lib.cloudflare.api import ERROR_CODE_VECTOR_INDEX_NOT_FOUND
 from embeddings.app.lib.cloudflare.api import API
 from embeddings.app.lib.cloudflare.api import CloudflareEmbeddingModels
 from embeddings.app.lib.cloudflare.models import VectorPayloadItem
+from embeddings.app.lib.cloudflare.models import CreateDatabaseRecord
 
 router = APIRouter(prefix="/embeddings/cloudflare")
 
@@ -32,14 +33,7 @@ async def create(namespace: str, data_in: EmbeddingsCreate, request: Request, re
         texts=data_in.text
     )
     query_vectors = result.get('data', [])
-
-    if data_in.persist_decoded:
-        vectors = [VectorPayloadItem(**{
-            "values": o[0],
-            "metadata": {"source": o[1], **data_in.payload}
-        }) for o in zip(query_vectors, data_in.text)]
-    else:
-        vectors = [VectorPayloadItem(**{"values": o, "metadata": data_in.payload}) for o in query_vectors]
+    vectors = [VectorPayloadItem(**{"values": o, "metadata": data_in.payload}) for o in query_vectors]
 
     try:
         result = cloudflare.insert_vectors(
@@ -47,6 +41,18 @@ async def create(namespace: str, data_in: EmbeddingsCreate, request: Request, re
             vectors=vectors,
             create_on_not_found=data_in.create_index
         )
+        print(("result", result))
+        insertion_records = [CreateDatabaseRecord(source=o[0], vector_id=o[1]) for o in zip(
+            result.get('ids', []), data_in.text
+        )]
+        print(("insertion_records", insertion_records))
+
+        insertion_result = cloudflare.upsert_database_table_records(
+            database_id=settings.CLOUDFLARE_D1_DATABASE_IDENTIFIER,
+            table_name=namespace,
+            records=insertion_records
+        )
+        print(("insertion_result", insertion_result))
     except CloudFlare.exceptions.CloudFlareAPIError as ex:
         if int(ex) == ERROR_CODE_VECTOR_INDEX_NOT_FOUND:
             raise HTTPException(

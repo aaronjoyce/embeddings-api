@@ -168,7 +168,7 @@ class API:
                 source TEXT NOT NULL,
                 vector_id TEXT NOT NULL,
                 created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-            )
+            );
         """
         res = self.client.accounts.d1.database.query.post(
             self.account_id,
@@ -182,12 +182,24 @@ class API:
     def upsert_database_table_records(self, database_id: str, table_name: str, records: List[CreateDatabaseRecord]):
         formatted_records = [f"('{record.source}', '{record.vector_id}')" for record in records]
         formatted_insertion_query = ",".join(formatted_records)
-        sql = f"INSERT INTO {table_name} (source, vector_id) VALUES {formatted_insertion_query}"
+        create_table_sql = f"""
+            CREATE TABLE IF NOT EXISTS {table_name} (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                source TEXT NOT NULL,
+                vector_id TEXT NOT NULL UNIQUE,
+                created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+            );
+        """
+        insertion_sql = f"""
+            INSERT INTO {table_name} (source, vector_id) 
+            VALUES {formatted_insertion_query} 
+            ON CONFLICT (vector_id) DO UPDATE SET source = EXCLUDED.source;
+        """
         res = self.client.accounts.d1.database.query.post(
             self.account_id,
             database_id,
             data={
-                "sql": sql
+                "sql": f"{create_table_sql} {insertion_sql}"
             }
         )
         return res

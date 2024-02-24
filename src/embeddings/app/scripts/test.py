@@ -3,7 +3,7 @@ import requests
 from typing import Optional, List
 
 
-NAMESPACE_NAME = "test1"
+NAMESPACE_NAME = "test20"
 
 BASE_URI = "http://localhost:8000"
 API_PREFIX = "/api/v1"
