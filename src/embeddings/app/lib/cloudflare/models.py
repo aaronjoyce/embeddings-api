@@ -19,3 +19,7 @@ class VectorPayloadItem(BaseModel):
     values: List[float]
     metadata: Dict[str, Any] = {}
 
+
+class CreateDatabaseRecord(BaseModel):
+    source: str
+    vector_id: str

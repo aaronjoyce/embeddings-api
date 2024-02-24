@@ -30,7 +30,7 @@ from embeddings.app.lib.cloudflare.api import API
 router = APIRouter(prefix="/namespace/cloudflare")
 
 client = API(
-    api_token=settings.CLOUDFLARE_MASTER_API_TOKEN,
+    api_token=settings.CLOUDFLARE_API_TOKEN,
     account_id=settings.CLOUDFLARE_API_ACCOUNT_ID
 )
 

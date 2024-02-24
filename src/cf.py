@@ -1,15 +1,28 @@
 from embeddings.app.lib.cloudflare.api import API
 from embeddings.app.lib.cloudflare.models import VectorPayloadItem
+from embeddings.app.lib.cloudflare.models import CreateDatabaseRecord
 
 from embeddings.app.config import settings
 
 
 def run():
     api = API(
-        api_token=settings.CLOUDFLARE_MASTER_API_TOKEN,
+        api_token=settings.CLOUDFLARE_API_TOKEN,
         account_id=settings.CLOUDFLARE_API_ACCOUNT_ID
     )
-    res = api.list_vector_indexes()
+
+    # res = api.create_database_table(
+    #     settings.CLOUDFLARE_D1_DATABASE_IDENTIFIER,
+    #     "test3"
+    # )
+    # print(("table.create.res", res))
+
+    test_records = [{"source": "abc", "vector_id": "123"},{"source": "def", "vector_id": "456"}]
+    res = api.upsert_database_table_records(
+        database_id=settings.CLOUDFLARE_D1_DATABASE_IDENTIFIER,
+        table_name="test3",
+        records=[CreateDatabaseRecord(source=o.get("source"), vector_id=o.get("vector_id")) for o in test_records]
+    )
     print(("vector.indexes.list", res))
 
     vectors = api.vectors_by_ids(

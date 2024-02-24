@@ -24,7 +24,7 @@ router = APIRouter(prefix="/embeddings/cloudflare")
 @router.post("/{namespace}", response_model=InsertionResult[EmbeddingRead])
 async def create(namespace: str, data_in: EmbeddingsCreate, request: Request, response: Response):
     cloudflare = API(
-        api_token=settings.CLOUDFLARE_MASTER_API_TOKEN,
+        api_token=settings.CLOUDFLARE_API_TOKEN,
         account_id=settings.CLOUDFLARE_API_ACCOUNT_ID
     )
     result = cloudflare.embed(
@@ -47,7 +47,6 @@ async def create(namespace: str, data_in: EmbeddingsCreate, request: Request, re
             vectors=vectors,
             create_on_not_found=data_in.create_index
         )
-        print(("result", result))
     except CloudFlare.exceptions.CloudFlareAPIError as ex:
         if int(ex) == ERROR_CODE_VECTOR_INDEX_NOT_FOUND:
             raise HTTPException(

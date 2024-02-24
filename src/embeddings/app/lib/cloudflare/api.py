@@ -1,12 +1,14 @@
 import json
 import enum
+import traceback
+
 import CloudFlare
 
 from typing import Optional, List
 
 from retry import retry
 
-from embeddings.app.config import settings
+from embeddings.app.lib.cloudflare.models import CreateDatabaseRecord
 
 from .models import VectorPayloadItem
 
@@ -154,6 +156,38 @@ class API:
             model,
             data={
                 "text": texts
+            }
+        )
+        return res
+
+    @retry(tries=5, delay=1, backoff=1, jitter=0.5)
+    def create_database_table(self, database_id: str, table_name: str):
+        create_table_sql = f"""
+            CREATE TABLE IF NOT EXISTS {table_name} (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                source TEXT NOT NULL,
+                vector_id TEXT NOT NULL,
+                created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )
+        """
+        res = self.client.accounts.d1.database.query.post(
+            self.account_id,
+            database_id,
+            data={
+                "sql": create_table_sql
+            }
+        )
+        return res
+
+    def upsert_database_table_records(self, database_id: str, table_name: str, records: List[CreateDatabaseRecord]):
+        formatted_records = [f"('{record.source}', '{record.vector_id}')" for record in records]
+        formatted_insertion_query = ",".join(formatted_records)
+        sql = f"INSERT INTO {table_name} (source, vector_id) VALUES {formatted_insertion_query}"
+        res = self.client.accounts.d1.database.query.post(
+            self.account_id,
+            database_id,
+            data={
+                "sql": sql
             }
         )
         return res

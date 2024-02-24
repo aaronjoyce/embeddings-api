@@ -12,7 +12,7 @@ AI_WORKER_API_BASE_URL = "https://api.cloudflare.com/client/v4/accounts/{account
 
 
 def auth_headers() -> Dict[str, Any]:
-    return {"Authorization": f"Bearer {settings.CLOUDFLARE_MASTER_API_TOKEN}"}
+    return {"Authorization": f"Bearer {settings.CLOUDFLARE_API_TOKEN}"}
 
 
 @retry(tries=5, delay=1, backoff=1, jitter=0.5)
