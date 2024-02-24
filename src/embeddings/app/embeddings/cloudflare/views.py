@@ -49,6 +49,7 @@ async def create(namespace: str, data_in: EmbeddingsCreate, request: Request, re
             table_name=namespace,
             records=insertion_records
         )
+        print(("insertion_result", insertion_result))
     except CloudFlare.exceptions.CloudFlareAPIError as ex:
         if int(ex) == ERROR_CODE_VECTOR_INDEX_NOT_FOUND:
             raise HTTPException(

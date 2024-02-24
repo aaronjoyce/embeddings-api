@@ -1,6 +1,5 @@
 import json
 import enum
-import traceback
 
 import CloudFlare
 
@@ -145,7 +144,7 @@ class API:
                         f"Expected one of: {','.join(allowed_dimensionality_values)}, got: {len(vectors[0].values)}"
                     )
 
-                create_vector_index_res = self.create_vector_index(
+                self.create_vector_index(
                     name=vector_index_name,
                     preset=default_dimensionality_presets[0].value
                 )
