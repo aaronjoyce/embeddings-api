@@ -1,3 +1,5 @@
+import uuid
+
 import requests
 
 from typing import List, Optional
@@ -13,17 +15,22 @@ def url(path: str, path_id: Optional[str] = None):
     return f"{uri}/{path_id}" if path_id is not None else uri
 
 
-def create_embedding(namespace: str, text: List[str]):
-    res = requests.post(
-        url=url(path="/embeddings/cloudflare", path_id=namespace),
-        json={
+def create_embedding(namespace: str, text: str):
+    json_data = {
+        "inputs": [{
+            "id": str(uuid.uuid4()),
             "text": text,
-            "create_index": True,
-            "persist_decoded": True,
+            "persist_source": True,
             "payload": {
                 "test1": 1
             }
-        }
+        }],
+        "create_namespace": True
+    }
+    print(("json_data", json_data))
+    res = requests.post(
+        url=url(path="/embeddings/cloudflare", path_id=namespace),
+        json=json_data
     )
     return res.json()
 
@@ -59,7 +66,7 @@ def query(namespace: str, inputs: str):
 
 def run():
     insertion_text = ["this is some sample text"]
-    res = create_embedding(namespace=NAMESPACE_NAME, text=insertion_text)
+    res = create_embedding(namespace=NAMESPACE_NAME, text=insertion_text[0])
     print(("cloudflare.embedding.create", res))
 
     res = get_namespace(name=NAMESPACE_NAME)

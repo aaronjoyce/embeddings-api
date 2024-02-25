@@ -210,7 +210,7 @@ class API:
                 "sql": f"{create_table_sql} {insertion_sql}"
             }
         )
-        return res
+        return res[-1]
 
     @retry(tries=5, delay=1, backoff=1, jitter=0.5)
     def database_table_records_by_vector_ids(self, database_id: str, table_name: str, vector_ids: List[str]):

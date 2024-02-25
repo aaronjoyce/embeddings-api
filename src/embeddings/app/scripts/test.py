@@ -1,3 +1,5 @@
+import uuid
+
 import requests
 
 from typing import Optional, List
@@ -16,14 +18,14 @@ def url(path: str, path_id: Optional[str] = None):
 
 def delete_namespace(name: str):
     res = requests.delete(
-        url=url(path="/namespace", path_id=name)
+        url=url(path="/namespace/qdrant", path_id=name)
     )
     return res
 
 
 def create_namespace(name: str, dimensionality: int = 768):
     res = requests.post(
-        url=url(path="/namespace"),
+        url=url(path="/namespace/qdrant"),
         json={
             "name": name,
             "dimensionality": dimensionality
@@ -32,26 +34,24 @@ def create_namespace(name: str, dimensionality: int = 768):
     return res.json()
 
 
-def qdrant_create_embedding(namespace: str, text: List[str]):
+def qdrant_create_embedding(namespace: str, text: str):
+    embedding_inputs = [
+        {
+            "text": text,
+            "payload": {"a": 1, "b": 2},
+            "id": str(uuid.uuid4())
+        },
+        {
+            "text": "sample text 2",
+            "payload": {"a": 4, "b": 5},
+            "id": str(uuid.uuid4())
+        }
+    ]
+    print(("embedding_inputs", embedding_inputs))
     res = requests.post(
         url=url(path="/embeddings/qdrant", path_id=namespace),
         json={
-            "text": text
-        }
-    )
-    return res.json()
-
-
-def cloudflare_create_embedding(namespace: str, text: List[str]):
-    res = requests.post(
-        url=url(path="/embeddings/cloudflare", path_id=namespace),
-        json={
-            "text": text,
-            "create_index": True,
-            "persist_decoded": True,
-            "payload": {
-                "test1": 1
-            }
+            "inputs": embedding_inputs
         }
     )
     return res.json()
@@ -101,8 +101,6 @@ def query(namespace: str, inputs: str):
 
 def run():
     insertion_text = ["this is some sample text"]
-    res = cloudflare_create_embedding(namespace="test20", text=insertion_text)
-    print(("cloudflare.embedding.create", res))
 
     res = delete_namespace(name=NAMESPACE_NAME)
     print(("qdrant.namespace.delete", res))
@@ -111,19 +109,20 @@ def run():
     print(("namespace.create.res", res))
 
     for i in range(3):
-        res = qdrant_create_embedding(namespace=NAMESPACE_NAME, text=insertion_text)
+        res = qdrant_create_embedding(namespace=NAMESPACE_NAME, text=insertion_text[0])
         print((f"embedding.create.res-{i}", res))
 
-    res = qdrant_list_embeddings(namespace=NAMESPACE_NAME, limit=1, page=1)
-    print(("embeddings.list.res", res))
-
-    embedding_id = res.get('items', [])[0].get('id')
-    print(("embedding_id", embedding_id, ))
-    res = qdrant_get_embedding(namespace=NAMESPACE_NAME, embedding_id=embedding_id)
-    print(("embedding.get.res", res))
-
-    res = query(namespace=NAMESPACE_NAME, inputs="some sample text")
-    print(("namespace.query.res", res, ))
+    # exit()
+    # res = qdrant_list_embeddings(namespace=NAMESPACE_NAME, limit=1, page=1)
+    # print(("embeddings.list.res", res))
+    #
+    # embedding_id = res.get('items', [])[0].get('id')
+    # print(("embedding_id", embedding_id, ))
+    # res = qdrant_get_embedding(namespace=NAMESPACE_NAME, embedding_id=embedding_id)
+    # print(("embedding.get.res", res))
+    #
+    # res = query(namespace=NAMESPACE_NAME, inputs="some sample text")
+    # print(("namespace.query.res", res, ))
 
 
 if __name__ == "__main__":

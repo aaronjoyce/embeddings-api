@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Request, Response
 
 from ..models import EmbeddingRead
-from ..models import EmbeddingsCreate
+from ..models import EmbeddingsCreate, EmbeddingCreateMulti
 
 from embeddings.models import InsertionResult
 from embeddings.app.config import settings
@@ -18,10 +18,11 @@ client = API(
 
 
 @router.post("/{namespace}", response_model=InsertionResult[EmbeddingRead])
-async def create(namespace: str, data_in: EmbeddingsCreate, request: Request, response: Response):
+async def create(namespace: str, data_in: EmbeddingCreateMulti, request: Request, response: Response):
+    texts = [o.text for o in data_in.inputs]
     result = client.embed(
         model=CloudflareEmbeddingModels.BAAIBase.value,
-        texts=data_in.text
+        texts=texts
     )
     return insert_vectors(
         client=client,

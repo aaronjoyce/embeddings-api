@@ -1,22 +1,21 @@
-import uuid
-
-from fastapi import status
 from fastapi import APIRouter
 from fastapi import Request
 from fastapi import Response
 from fastapi import HTTPException
 
-from ..models import EmbeddingRead
-from ..models import EmbeddingsCreate
-from ..models import EmbeddingPagination
+from ..models import EmbeddingRead, EmbeddingCreateMulti, EmbeddingPagination
 
 from qdrant_client.async_qdrant_client import AsyncQdrantClient
-from qdrant_client.http.exceptions import UnexpectedResponse
-from qdrant_client.conversions import common_types
 from embeddings.app.deps.request_params import CommonParams
 
-from embeddings.app.lib.cloudflare.api import CloudflareEmbeddingModels
-from embeddings.app.lib.cloudflare.async_api import aembed as cloudflare_embed
+from .service import embedding as get_embedding
+from .service import (
+    insert_embedding,
+    collection_exists,
+    embeddings,
+)
+
+from embeddings.models import InsertionResult
 
 from embeddings.app.config import settings
 
@@ -26,83 +25,35 @@ client = AsyncQdrantClient(host=settings.QDRANT_HOST, port=settings.QDRANT_HTTP_
 
 
 @router.get("/{namespace}/{embedding_id}", response_model=EmbeddingRead)
-async def get_embedding(namespace: str, embedding_id: str, request: Request, response: Response):
-    try:
-        result = await client.retrieve(
-            collection_name=namespace,
-            ids=[embedding_id],
-            with_vectors=False,
-            with_payload=True
-        )
-        point = result[0]
-        return EmbeddingRead(
-            id=point.id
-        )
-    except UnexpectedResponse as ex:
-        if ex.status_code == status.HTTP_404_NOT_FOUND:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=[{"msg": ex.content.decode('utf-8')}]
-            )
+async def get(namespace: str, embedding_id: str, request: Request, response: Response):
+    return await get_embedding(
+        client=client,
+        namespace=namespace,
+        embedding_id=embedding_id
+    )
 
 
 @router.get("/{namespace}", response_model=EmbeddingPagination)
 async def list_embeddings(namespace: str, common: CommonParams, request: Request, response: Response):
-    points, offset = await client.scroll(
-        collection_name=namespace,
-        limit=common.get("limit"),
-        offset=common.get("offset")
+    return await embeddings(
+        client=client,
+        namespace=namespace,
+        common=common
     )
-    body = {
-        "total": len(points),
-        "page": common.get("page"),
-        "items": [{"id": o.id} for o in points]
-    }
-    return EmbeddingPagination(**body)
 
 
-@router.post("/{namespace}", response_model=EmbeddingRead)
-async def create(namespace: str, data_in: EmbeddingsCreate, request: Request, response: Response):
-    try:
-        # check if the collection exists
-        await client.get_collection(
-            collection_name=namespace
-        )
-    except UnexpectedResponse as ex:
-        if ex.status_code == status.HTTP_404_NOT_FOUND:
-            raise HTTPException(
-                status_code=404,
-                detail=[{"msg": f"Collection with name {namespace} not found"}]
-            )
-
+@router.post("/{namespace}", response_model=InsertionResult[EmbeddingRead])
+async def create(namespace: str, data_in: EmbeddingCreateMulti, request: Request, response: Response):
+    exists = await collection_exists(client, namespace)
+    if not exists:
         raise HTTPException(
-            status_code=500,
-            detail=[{"msg": ex.content.decode('utf-8')}]
+            status_code=404,
+            detail=[{"msg": f"Collection with name {namespace} not found"}]
         )
 
-    result = await cloudflare_embed(
-        model=CloudflareEmbeddingModels.BAAIBase.value,
-        text=data_in.text
+    res = await insert_embedding(
+        client=client,
+        data_in=data_in,
+        namespace=namespace
     )
-    embedding_vectors = result.get('result', {}).get('data', [])
-    if not embedding_vectors:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=[{"msg": "Empty embedding vector response from the Cloudflare API"}]
-        )
-
-    new_id = str(uuid.uuid4())
-    point_data = {
-        "id": new_id,
-        "vector": embedding_vectors[0]
-    }
-    if data_in.payload:
-        point_data["payload"] = data_in.payload
-
-    upsert_result = await client.upsert(
-        collection_name=namespace,
-        points=[common_types.PointStruct(**point_data)]
-    )
-    return EmbeddingRead(
-        id=new_id,
-    )
+    return res
