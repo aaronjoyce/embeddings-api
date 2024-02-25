@@ -2,6 +2,7 @@ from fastapi import status, HTTPException
 from qdrant_client.async_qdrant_client import AsyncQdrantClient
 from qdrant_client.http.exceptions import UnexpectedResponse
 from qdrant_client.conversions import common_types
+from qdrant_client.http.models import UpdateStatus
 
 from ..models import EmbeddingRead, EmbeddingPagination, EmbeddingCreateMulti
 
@@ -30,9 +31,8 @@ async def embedding(client: AsyncQdrantClient, namespace: str, embedding_id: str
             with_vectors=False,
             with_payload=True
         )
-        point = result[0]
         return EmbeddingRead(
-            id=point.id
+            id=result[0].id
         )
     except UnexpectedResponse as ex:
         if ex.status_code == status.HTTP_404_NOT_FOUND:
@@ -83,6 +83,12 @@ async def insert_embedding(client: AsyncQdrantClient, namespace: str, data_in: E
             "payload": o[1].payload
         }) for o in zip(result.get('data', []), data_in.inputs)]
     )
+    if upsert_result.status != UpdateStatus.COMPLETED:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=[{"msg": "Error occurred whilst attempting to upsert data in Qdrant"}]
+        )
+
     insertion_records = [CreateDatabaseRecord(
         vector_id=o.id,
         source=o.text
