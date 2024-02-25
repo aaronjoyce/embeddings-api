@@ -63,9 +63,7 @@ async def collection_exists(client: AsyncQdrantClient, namespace: str) -> bool:
             collection_name=namespace
         )
     except UnexpectedResponse as ex:
-
         return False
-
     return True
 
 
@@ -78,10 +76,10 @@ async def insert_embedding(client: AsyncQdrantClient, namespace: str, data_in: E
     upsert_result = await client.upsert(
         collection_name=namespace,
         points=[common_types.PointStruct(**{
-            "vector": o[0],
-            "id": o[1].id,
-            "payload": o[1].payload
-        }) for o in zip(result.get('data', []), data_in.inputs)]
+            "vector": vector,
+            "id": meta.id,
+            "payload": meta.payload
+        }) for vector, meta in zip(result.get('data', []), data_in.inputs)]
     )
     if upsert_result.status != UpdateStatus.COMPLETED:
         raise HTTPException(

@@ -21,10 +21,10 @@ def insert_vectors(
     vectors: List[List[float]]
 ) -> InsertionResult[EmbeddingRead]:
     vectors = [VectorPayloadItem(**{
-        "values": o[0],
-        "metadata": o[1].payload,
-        "id": o[1].id
-    }) for o in zip(vectors, data_in.inputs)]
+        "values": vector,
+        "id": meta.id,
+        "metadata": meta.payload
+    }) for vector, meta in zip(vectors, data_in.inputs)]
     try:
         result = client.insert_vectors(
             vector_index_name=namespace,
@@ -32,11 +32,9 @@ def insert_vectors(
             create_on_not_found=data_in.create_namespace
         )
         insertion_records = [CreateDatabaseRecord(
-            vector_id=o[0],
-            source=o[1].text
-        ) for o in zip(
-            result.get('ids', []), data_in.inputs
-        )]
+            vector_id=vector_id,
+            source=meta.text
+        ) for vector_id, meta in zip(result.get('ids', []), data_in.inputs)]
         insertion_result = client.upsert_database_table_records(
             database_id=settings.CLOUDFLARE_D1_DATABASE_IDENTIFIER,
             table_name=namespace,
