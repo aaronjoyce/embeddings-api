@@ -22,5 +22,8 @@ class Settings(BaseSettings):
     QDRANT_HTTP_PORT: int
     QDRANT_GRPC_PORT: int
 
+    # Optional authentication
+    ADMIN_SECRET_KEY: Optional[str] = None
+
 
 settings = Settings()

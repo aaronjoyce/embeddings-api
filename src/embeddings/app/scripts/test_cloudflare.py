@@ -15,6 +15,12 @@ def url(path: str, path_id: Optional[str] = None):
     return f"{uri}/{path_id}" if path_id is not None else uri
 
 
+def headers():
+    return {
+        "Authorization": "basic def"
+    }
+
+
 def create_embedding(namespace: str, text: str):
     json_data = {
         "inputs": [{
@@ -31,7 +37,8 @@ def create_embedding(namespace: str, text: str):
     print(("json_data", json_data))
     res = requests.post(
         url=url(path="/embeddings/cloudflare", path_id=namespace),
-        json=json_data
+        json=json_data,
+        headers=headers()
     )
     return res.json()
 
@@ -39,7 +46,8 @@ def create_embedding(namespace: str, text: str):
 def get_namespace(name: str):
     uri = url(path="/namespace/cloudflare", path_id=name)
     res = requests.get(
-        url=uri
+        url=uri,
+        headers=headers()
     )
     return res.json()
 
@@ -47,7 +55,8 @@ def get_namespace(name: str):
 def delete_namespace(name: str):
     uri = url(path="/namespace/cloudflare", path_id=name)
     res = requests.delete(
-        url=uri
+        url=uri,
+        headers=headers()
     )
     return res.json()
 
@@ -60,7 +69,8 @@ def query(namespace: str, inputs: str):
             "inputs": inputs,
             "return_vectors": False,
             "limit": 1
-        }
+        },
+        headers=headers()
     )
     return res
 
