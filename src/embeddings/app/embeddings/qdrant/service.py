@@ -80,7 +80,6 @@ async def insert_embedding(
         texts=texts
     )
     try:
-        print("got here 10")
         upsert_result = await client.upsert(
             collection_name=namespace,
             points=[common_types.PointStruct(**{
@@ -100,22 +99,18 @@ async def insert_embedding(
             if expected_dimension_error:
                 expected_dimension = int(expected_dimension_error.group(1))
                 received_dimension = int(expected_dimension_error.group(2))
-                compatible_models = DIMENSIONALITY_PRESETS.get(expected_dimension, [])
-                compatible_model_names = ','.join([str(o) for o in compatible_models])
+                compatible_model_names = ','.join([str(o) for o in DIMENSIONALITY_PRESETS.get(expected_dimension, [])])
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail=[{
-                        "msg": f"The embedding model's dimensionality: {expected_dimension} "
+                        "msg": f"The embedding model's dimensionality: {received_dimension} "
                                f"(defaults to {data_in.embedding_model}) is not compatible with the "
-                               f"dimensionality of the namespace '{namespace}', dimensionality: {received_dimension}. "
+                               f"dimensionality of the namespace '{namespace}', dimensionality: {expected_dimension}. "
                                f"Please provide one of the following compatible models: {compatible_model_names}",
                     }]
                 )
 
         raise ex
-
-
-
 
     insertion_records = [CreateDatabaseRecord(
         vector_id=o.id,

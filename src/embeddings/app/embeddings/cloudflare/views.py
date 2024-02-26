@@ -20,10 +20,12 @@ client = API(
 @router.post("/{namespace}", response_model=InsertionResult[EmbeddingRead])
 async def create(namespace: str, data_in: EmbeddingCreateMulti, request: Request, response: Response):
     texts = [o.text for o in data_in.inputs]
+
     result = client.embed(
-        model=CloudflareEmbeddingModels.BAAIBase.value,
+        model=data_in.embedding_model.value,
         texts=texts
     )
+    print(("result.1", result))
     return insert_vectors(
         client=client,
         vectors=result.get("data", []),

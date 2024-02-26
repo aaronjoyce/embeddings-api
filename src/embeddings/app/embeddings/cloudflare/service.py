@@ -26,11 +26,15 @@ def insert_vectors(
         "metadata": meta.payload
     }) for vector, meta in zip(vectors, data_in.inputs)]
     try:
+        print(("data_in", data_in, "namespace", namespace))
+        print(("data_in.embedding_model", data_in.embedding_model))
         result = client.insert_vectors(
             vector_index_name=namespace,
             vectors=vectors,
-            create_on_not_found=data_in.create_namespace
+            create_on_not_found=data_in.create_namespace,
+            model_name=data_in.embedding_model
         )
+        print(("result", result))
         insertion_records = [CreateDatabaseRecord(
             vector_id=vector_id,
             source=meta.text
@@ -46,8 +50,8 @@ def insert_vectors(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=[{
                     "msg": f"Vector index with name '{namespace}' not found. "
-                    f"Create the index via a separate call or include 'create_index' "
-                    f"in your payload to automagically create and insert"
+                    f"Create the index via a separate call or include 'create_namespace' "
+                    f"in your payload to automagically create and insert."
                 }]
             )
         else:

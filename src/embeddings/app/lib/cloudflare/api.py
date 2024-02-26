@@ -1,8 +1,11 @@
 import json
 import enum
+import re
+import traceback
 
 import CloudFlare
 
+from fastapi import HTTPException, status
 from typing import Optional, List
 
 from retry import retry
@@ -146,7 +149,13 @@ class API:
         return res
 
     @retry(tries=5, delay=1, backoff=1, jitter=0.5)
-    def insert_vectors(self, vector_index_name: str, vectors: List[VectorPayloadItem], create_on_not_found: bool = False):
+    def insert_vectors(
+            self,
+            vector_index_name: str,
+            vectors: List[VectorPayloadItem],
+            create_on_not_found: bool = False,
+            model_name: CloudflareEmbeddingModels = None
+    ):
         data = "\n".join([json.dumps({"id": o.id, "values": o.values, "metadata": o.metadata}) for o in vectors])
         try:
             res = self.client.accounts.vectorize.indexes.insert.post(
@@ -155,7 +164,32 @@ class API:
                 data=data
             )
         except CloudFlare.exceptions.CloudFlareAPIError as ex:
-            if int(ex) == ERROR_CODE_VECTOR_INDEX_NOT_FOUND and create_on_not_found:
+            print(("insert_vectors.ex", str(ex)))
+            print(traceback.format_exc())
+            exception_status_code = int(ex)
+            print(("exception_status_code", exception_status_code))
+            if exception_status_code == ERROR_CODE_INSERT_VECTOR_INDEX_SIZE_MISMATCH:
+                matches = re.search(
+                    r"the vector length is incorrect for this index; must be (\d+), got (\d+)",
+                    str(ex)
+                )
+                expected_dimension = int(matches.group(1))
+                received_dimension = int(matches.group(2))
+                print(("expected_dimension", expected_dimension))
+                print(("received_dimension", received_dimension))
+                compatible_model_names = ','.join([str(o) for o in DIMENSIONALITY_PRESETS.get(expected_dimension, [])])
+                print(("compatible_model_names", compatible_model_names))
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=[{
+                        "msg": f"The embedding model's dimensionality: {received_dimension} is "
+                               f"not compatible with the dimensionality of the namespace '{vector_index_name}', "
+                               f"dimensionality: {expected_dimension}. "
+                               f"Please provide one of the following compatible models: {compatible_model_names}",
+                    }]
+                )
+
+            elif exception_status_code == ERROR_CODE_VECTOR_INDEX_NOT_FOUND and create_on_not_found:
                 # infer dimensionality from the vector at index 0
                 default_dimensionality_presets = DIMENSIONALITY_PRESETS.get(len(vectors[0].values), [])
                 if not default_dimensionality_presets:
@@ -165,9 +199,11 @@ class API:
                         f"Expected one of: {','.join(allowed_dimensionality_values)}, got: {len(vectors[0].values)}"
                     )
 
+                preset = str(model_name) if model_name is not None else default_dimensionality_presets[0].value
+                print(("preset", preset, "model_name", model_name))
                 self.create_vector_index(
                     name=vector_index_name,
-                    preset=default_dimensionality_presets[0].value
+                    preset=preset
                 )
                 return self.insert_vectors(
                     vector_index_name=vector_index_name,

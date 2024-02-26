@@ -4,7 +4,7 @@ import requests
 
 from typing import List, Optional
 
-NAMESPACE_NAME = "test21"
+NAMESPACE_NAME = "test95"
 
 BASE_URI = "http://localhost:8000"
 API_PREFIX = "/api/v1"
@@ -25,7 +25,8 @@ def create_embedding(namespace: str, text: str):
                 "test1": 1
             }
         }],
-        "create_namespace": True
+        "create_namespace": False,
+        # "embedding_model": "@cf/baai/bge-base-en-v1.5",  # "@cf/baai/bge-small-en-v1.5"
     }
     print(("json_data", json_data))
     res = requests.post(
@@ -68,6 +69,7 @@ def run():
     insertion_text = ["this is some sample text"]
     res = create_embedding(namespace=NAMESPACE_NAME, text=insertion_text[0])
     print(("cloudflare.embedding.create", res))
+    exit()
 
     res = get_namespace(name=NAMESPACE_NAME)
     print(("cloudflare.namespace", res))
