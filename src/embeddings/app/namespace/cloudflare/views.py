@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Response, Request
+from fastapi import APIRouter, Response, Request, Depends
 
 from .models import (
     NamespaceCreate,
@@ -7,6 +7,7 @@ from .models import (
     NamespaceQuery
 )
 
+from embeddings.app.permissions.auth import PermissionDependency, DefaultPermission
 from embeddings.app.document.models import DocumentPagination
 from embeddings.app.config import settings
 from embeddings.app.deps.request_params import CommonParams
@@ -46,8 +47,12 @@ async def query(namespace: str, data_in: NamespaceQuery, common: CommonParams, r
     )
 
 
-@router.get("/{namespace}", response_model=NamespaceRead)
-async def get(namespace: str, request: Request, response: Response):
+@router.get(
+    "/{namespace}",
+    response_model=NamespaceRead,
+    dependencies=[Depends(PermissionDependency([DefaultPermission]))]
+)
+async def get(namespace: str, response: Response):
     return vector_index_by_name(client=client, namespace=namespace)
 
 

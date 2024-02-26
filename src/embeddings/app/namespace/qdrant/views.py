@@ -3,6 +3,7 @@ from fastapi import Request
 from fastapi import Response
 from fastapi import HTTPException
 from fastapi import status
+from fastapi import Depends
 
 from .models import NamespaceCreate
 from .models import NamespaceRead
@@ -22,6 +23,7 @@ from embeddings.app.lib.cloudflare.async_api import aembed as cloudflare_aembed
 from embeddings.app.lib.cloudflare.api import CloudflareEmbeddingModels
 
 from embeddings.app.deps.request_params import CommonParams
+from embeddings.app.permissions.auth import PermissionDependency
 
 from .service import namespace as get_namespace
 
@@ -58,7 +60,7 @@ async def query(namespace: str, payload: NamespaceQuery, common: CommonParams, r
     return DocumentPagination(**data)
 
 
-@router.get("/{namespace}", response_model=NamespaceRead)
+@router.get("/{namespace}", response_model=NamespaceRead, dependencies=[Depends(PermissionDependency([]))])
 async def get(namespace: str, request: Request, response: Response):
     try:
         return await get_namespace(namespace)
