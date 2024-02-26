@@ -2,10 +2,15 @@ from embeddings.app.lib.cloudflare.api import API
 from embeddings.app.lib.cloudflare.models import VectorPayloadItem
 from embeddings.app.lib.cloudflare.models import CreateDatabaseRecord
 
+from embeddings.app.lib.cloudflare.api import CloudflareEmbeddingModels
+
 from embeddings.app.config import settings
 
 
 def run():
+    print(str(CloudflareEmbeddingModels.BAAIBase))
+    print(CloudflareEmbeddingModels.BAAIBase.dimensionality)
+    exit()
     api = API(
         api_token=settings.CLOUDFLARE_API_TOKEN,
         account_id=settings.CLOUDFLARE_API_ACCOUNT_ID

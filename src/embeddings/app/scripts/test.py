@@ -5,7 +5,7 @@ import requests
 from typing import Optional, List
 
 
-NAMESPACE_NAME = "test20"
+NAMESPACE_NAME = "test92"
 
 BASE_URI = "http://localhost:8000"
 API_PREFIX = "/api/v1"
@@ -51,7 +51,9 @@ def qdrant_create_embedding(namespace: str, text: str):
     res = requests.post(
         url=url(path="/embeddings/qdrant", path_id=namespace),
         json={
-            "inputs": embedding_inputs
+            "inputs": embedding_inputs,
+            "create_namespace": True,
+            "embedding_model": "@cf/baai/bge-base-en-v1.5",  # "@cf/baai/bge-large-en-v1.5"
         }
     )
     return res.json()
@@ -102,11 +104,11 @@ def query(namespace: str, inputs: str):
 def run():
     insertion_text = ["this is some sample text"]
 
-    res = delete_namespace(name=NAMESPACE_NAME)
-    print(("qdrant.namespace.delete", res))
-
-    res = create_namespace(name=NAMESPACE_NAME)
-    print(("namespace.create.res", res))
+    # res = delete_namespace(name=NAMESPACE_NAME)
+    # print(("qdrant.namespace.delete", res))
+    #
+    # res = create_namespace(name=NAMESPACE_NAME)
+    # print(("namespace.create.res", res))
 
     for i in range(3):
         res = qdrant_create_embedding(namespace=NAMESPACE_NAME, text=insertion_text[0])

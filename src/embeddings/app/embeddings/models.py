@@ -1,11 +1,13 @@
 import uuid
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator, ValidationInfo
 from pydantic import Field
 
 from typing import List, Dict, Any, Optional
 
 from embeddings.models import Pagination
+
+from embeddings.app.lib.cloudflare.api import CloudflareEmbeddingModels
 
 
 class EmbeddingRead(BaseModel):
@@ -35,3 +37,4 @@ class EmbeddingsCreateSingle(BaseModel):
 class EmbeddingCreateMulti(BaseModel):
     inputs: List[EmbeddingsCreateSingle]
     create_namespace: Optional[bool] = Field(default=True)
+    embedding_model: Optional[CloudflareEmbeddingModels] = Field(default=CloudflareEmbeddingModels.BAAIBase)
