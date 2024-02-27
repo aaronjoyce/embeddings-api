@@ -14,6 +14,13 @@ from embeddings.models import InsertionResult
 from embeddings.app.config import settings
 
 
+def delete_embeddings(client: API, namespace: str, embedding_ids: List[str]) -> List[str]:
+    return client.delete_vectors_by_ids(
+        vector_index_name=namespace,
+        ids=embedding_ids
+    )
+
+
 def get_embeddings(client: API, namespace: str, embedding_ids: List[str]) -> List[EmbeddingRead]:
     vector_results = client.vectors_by_ids(
         vector_index_name=namespace,

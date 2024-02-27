@@ -149,6 +149,21 @@ class API:
         return res
 
     @retry(tries=5, delay=1, backoff=1, jitter=0.5)
+    def delete_vectors_by_ids(self, vector_index_name: str, ids: List[str]):
+        try:
+            res = self.client.accounts.vectorize.indexes.delete_by_ids.post(
+                self.account_id,
+                vector_index_name,
+                data={
+                    "ids": ids
+                }
+            )
+        except CloudFlare.exceptions.CloudFlareAPIError as ex:
+            raise ex
+
+        return res
+
+    @retry(tries=5, delay=1, backoff=1, jitter=0.5)
     def insert_vectors(
             self,
             vector_index_name: str,

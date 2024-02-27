@@ -10,6 +10,10 @@ from embeddings.models import Pagination
 from embeddings.app.lib.cloudflare.api import CloudflareEmbeddingModels
 
 
+class EmbeddingDelete(BaseModel):
+    success: bool
+
+
 class EmbeddingRead(BaseModel):
     id: str
     vector: Optional[List[float]] = None

@@ -12,7 +12,9 @@ client = TestClient(app)
 
 CREATE_CLOUDFLARE_NAMESPACE_PATH = "/api/v1/namespace/cloudflare"
 CREATE_CLOUDFLARE_EMBEDDING_PATH = "/api/v1/embeddings/cloudflare"
-GET_CLOUDFLARE_EMBEDDING_PATH = "/api/v1/embeddings/cloudflare/{namespace}/{embedding_id}"
+CLOUDFLARE_EMBEDDING_PATH = "/api/v1/embeddings/cloudflare/{namespace}/{embedding_id}"
+DELETE_CLOUDFLARE_NAMESPACE_PATH = "/api/v1/namespace/cloudflare/{namespace}"
+
 
 
 def generate_namespace_name():
@@ -150,7 +152,7 @@ def test_create_cloudflare_embedding_payload():
     created_embedding_item = create_response_json.get("items", [])[0]
 
     response = client.get(
-        url=GET_CLOUDFLARE_EMBEDDING_PATH.format(
+        url=CLOUDFLARE_EMBEDDING_PATH.format(
             namespace=namespace_name,
             embedding_id=created_embedding_item.get("id")
         ),
@@ -178,9 +180,61 @@ def test_create_cloudflare_embedding_source():
     created_embedding_json = create_response_json.get("items", [])[0]
 
     response = client.get(
-        url=GET_CLOUDFLARE_EMBEDDING_PATH.format(
+        url=CLOUDFLARE_EMBEDDING_PATH.format(
             namespace=namespace_name,
             embedding_id=created_embedding_json.get("id")
         ),
     )
     return response.json().get("source") == source_text
+
+
+def test_delete_cloudflare_embedding():
+    namespace_name = generate_namespace_name()
+
+    source_text = "sample text"
+    response = client.post(
+        url=f"{CREATE_CLOUDFLARE_EMBEDDING_PATH}/{namespace_name}",
+        json={
+            "inputs": [{
+                "text": source_text,
+                "persist_source": True,
+            }],
+            "create_namespace": True,
+        }
+    )
+    assert response.status_code == status.HTTP_200_OK
+
+    create_response_json = response.json()
+    created_embedding_item = create_response_json.get("items", [])[0]
+
+    response = client.delete(
+        url=CLOUDFLARE_EMBEDDING_PATH.format(
+            namespace=namespace_name,
+            embedding_id=created_embedding_item.get("id")
+        )
+    )
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json().get("success")
+
+
+def test_delete_cloudflare_namespace():
+    namespace_name = generate_namespace_name()
+    response = client.post(
+        url=CREATE_CLOUDFLARE_NAMESPACE_PATH,
+        json={
+            "preset": str(CloudflareEmbeddingModels.BAAISmall),
+            "name": namespace_name
+        }
+    )
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json().get("name") == namespace_name
+
+    response = client.delete(
+        url=DELETE_CLOUDFLARE_NAMESPACE_PATH.format(
+            namespace=namespace_name
+        )
+    )
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json().get("success")
+
+

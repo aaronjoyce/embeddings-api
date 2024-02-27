@@ -7,7 +7,9 @@ from embeddings.models import InsertionResult
 from embeddings.app.config import settings
 from embeddings.app.lib.cloudflare.api import API, CloudflareEmbeddingModels
 
-from .service import insert_vectors, get_embeddings
+from .service import insert_vectors, get_embeddings, delete_embeddings
+
+from ..models import EmbeddingDelete
 
 router = APIRouter(prefix="/embeddings/cloudflare")
 
@@ -18,13 +20,25 @@ client = API(
 
 
 @router.get("/{namespace}/{embedding_id}", response_model=EmbeddingRead)
-async def get(namespace: str, embedding_id, request: Request, response: Response):
+async def get(namespace: str, embedding_id: str, request: Request, response: Response):
     embedding_results = get_embeddings(
         client=client,
         namespace=namespace,
         embedding_ids=[embedding_id]
     )
     return embedding_results[0]
+
+
+@router.delete("/{namespace}/{embedding_id}", response_model=EmbeddingDelete)
+async def delete(namespace: str, embedding_id: str, request: Request, response: Response):
+    result = delete_embeddings(
+        client=client,
+        namespace=namespace,
+        embedding_ids=[embedding_id]
+    )
+    return EmbeddingDelete(
+        success=True
+    )
 
 
 @router.post("/{namespace}", response_model=InsertionResult[EmbeddingRead])
