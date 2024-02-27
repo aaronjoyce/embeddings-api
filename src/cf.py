@@ -8,13 +8,12 @@ from embeddings.app.config import settings
 
 
 def run():
-    print(str(CloudflareEmbeddingModels.BAAIBase))
-    print(CloudflareEmbeddingModels.BAAIBase.dimensionality)
-    exit()
     api = API(
         api_token=settings.CLOUDFLARE_API_TOKEN,
         account_id=settings.CLOUDFLARE_API_ACCOUNT_ID
     )
+
+
 
     # res = api.create_database_table(
     #     settings.CLOUDFLARE_D1_DATABASE_IDENTIFIER,

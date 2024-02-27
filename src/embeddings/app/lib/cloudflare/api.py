@@ -164,10 +164,7 @@ class API:
                 data=data
             )
         except CloudFlare.exceptions.CloudFlareAPIError as ex:
-            print(("insert_vectors.ex", str(ex)))
-            print(traceback.format_exc())
             exception_status_code = int(ex)
-            print(("exception_status_code", exception_status_code))
             if exception_status_code == ERROR_CODE_INSERT_VECTOR_INDEX_SIZE_MISMATCH:
                 matches = re.search(
                     r"the vector length is incorrect for this index; must be (\d+), got (\d+)",
@@ -175,10 +172,7 @@ class API:
                 )
                 expected_dimension = int(matches.group(1))
                 received_dimension = int(matches.group(2))
-                print(("expected_dimension", expected_dimension))
-                print(("received_dimension", received_dimension))
                 compatible_model_names = ','.join([str(o) for o in DIMENSIONALITY_PRESETS.get(expected_dimension, [])])
-                print(("compatible_model_names", compatible_model_names))
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail=[{
@@ -200,7 +194,6 @@ class API:
                     )
 
                 preset = str(model_name) if model_name is not None else default_dimensionality_presets[0].value
-                print(("preset", preset, "model_name", model_name))
                 self.create_vector_index(
                     name=vector_index_name,
                     preset=preset

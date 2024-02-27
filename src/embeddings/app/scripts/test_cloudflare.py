@@ -21,12 +21,32 @@ def headers():
     }
 
 
+def create_namespace(namespace: str):
+    response = requests.post(
+        url=url(path="/namespace/cloudflare"),
+        json={
+            "preset": namespace
+        }
+    )
+    response_data = response.json()
+    print(("response_data", response_data))
+
+
+def get_embedding(namespace: str, embedding_id: str):
+    res = requests.get(
+        url=url(path=f"/embeddings/cloudflare/{namespace}", path_id=embedding_id),
+        headers=headers()
+    )
+    print(("get_embedding.res", res))
+    return res.json()
+
+
 def create_embedding(namespace: str, text: str):
     json_data = {
         "inputs": [{
             "id": str(uuid.uuid4()),
             "text": text,
-            "persist_source": True,
+            "persist_source": False,
             "payload": {
                 "test1": 1
             }
@@ -76,10 +96,22 @@ def query(namespace: str, inputs: str):
 
 
 def run():
-    # insertion_text = ["this is some sample text"]
-    # res = create_embedding(namespace=NAMESPACE_NAME, text=insertion_text[0])
-    # print(("cloudflare.embedding.create", res))
+    insertion_text = ["this is some sample text"]
+    res = create_embedding(namespace=NAMESPACE_NAME, text=insertion_text[0])
+    print(("cloudflare.embedding.create", res))
+    exit()
+    res = get_embedding(
+        namespace=NAMESPACE_NAME,
+        embedding_id="05b1c99e-e947-4e4d-8fc6-5e84947a338d"
+    )
+    print(("get_embedding.res", res))
+    exit()
     # exit()
+    create_namespace(
+        namespace="invalid_namespace_name"
+    )
+    exit()
+
 
     res = get_namespace(name=NAMESPACE_NAME)
     print(("cloudflare.namespace", res))

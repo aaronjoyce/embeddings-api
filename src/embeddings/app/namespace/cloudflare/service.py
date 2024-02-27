@@ -23,9 +23,7 @@ def create_vector_index(client: API, data_in: NamespaceCreate) -> NamespaceRead:
         name=data_in.name,
         preset=data_in.preset
     )
-    print(("create_vector_index.res", res))
     config = res.get('config', {})
-    print(("create_vector_index.config", config))
     return NamespaceRead(
         name=res.get('name'),
         dimensionality=config.get('dimensions'),

@@ -13,6 +13,8 @@ from embeddings.app.lib.cloudflare.api import CloudflareEmbeddingModels
 class EmbeddingRead(BaseModel):
     id: str
     vector: Optional[List[float]] = None
+    payload: Optional[Dict[str, Any]] = None
+    source: Optional[str] = None
 
 
 class EmbeddingPagination(Pagination):
