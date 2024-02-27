@@ -54,12 +54,12 @@ def create_embedding(namespace: str, text: str):
         "inputs": [{
             "id": str(uuid.uuid4()),
             "text": text,
-            "persist_source": False,
+            "persist_source": True,
             "payload": {
                 "test1": 1
             }
         }],
-        "create_namespace": False,
+        "create_namespace": True,
         # "embedding_model": "@cf/baai/bge-base-en-v1.5",  # "@cf/baai/bge-small-en-v1.5"
     }
     print(("json_data", json_data))
@@ -107,6 +107,11 @@ def run():
     # insertion_text = ["this is some sample text"]
     # res = create_embedding(namespace=NAMESPACE_NAME, text=insertion_text[0])
     # print(("cloudflare.embedding.create", res))
+
+    res = query(namespace=NAMESPACE_NAME, inputs="sample text")
+    print(("cloudflare.query.res", res, res.json()))
+
+    exit()
 
     res = delete_embedding(
         namespace=NAMESPACE_NAME,

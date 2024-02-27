@@ -6,7 +6,7 @@ import traceback
 import CloudFlare
 
 from fastapi import HTTPException, status
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 
 from retry import retry
 
@@ -89,15 +89,20 @@ class API:
         vector: List[float],
         top_k: Optional[int] = 5,
         return_vectors: Optional[bool] = False,
-        return_metadata: Optional[bool] = False
+        return_metadata: Optional[bool] = False,
+        metadata_filter: Optional[Dict[str, Any]] = None
     ):
         data = {
             "vector": vector,
             "topK": top_k,
-            "returnMetadata": return_metadata
+            "returnMetadata": return_metadata,
+            "filter": filter
         }
         if return_vectors:
             data["returnValues"] = True
+
+        if metadata_filter is not None:
+            data["filter"] = metadata_filter
 
         res = self.client.accounts.vectorize.indexes.query.post(
             self.account_id,

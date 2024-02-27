@@ -43,7 +43,8 @@ def embedding_matches(client: API, namespace: str, data_in: NamespaceQuery):
         vector=query_vector,
         return_vectors=data_in.return_vectors,
         return_metadata=data_in.return_metadata,
-        top_k=data_in.limit
+        top_k=data_in.limit,
+        metadata_filter=data_in.filter
     )
     return query_search_result.get('matches', [])
 

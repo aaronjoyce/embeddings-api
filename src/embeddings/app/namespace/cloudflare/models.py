@@ -1,4 +1,4 @@
-from typing import Optional, Literal
+from typing import Optional, Literal, Dict, Any
 from pydantic import BaseModel
 from pydantic import Field
 
@@ -36,4 +36,5 @@ class NamespaceQuery(BaseModel):
     return_vectors: Optional[bool] = False
     return_metadata: Optional[bool] = False
     limit: Optional[int] = Field(default=5, gt=0)
-
+    filter: Optional[Dict[str, Any]] = Field(default=None)
+    

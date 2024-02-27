@@ -234,6 +234,7 @@ class TestCloudflareEmbedding(TestBase):
 
 
 class TestCloudflareNamespace(TestBase):
+
     def test_create(self):
         namespace_name = generate_namespace_name()
         response = create_cloudflare_namespace(
@@ -289,3 +290,6 @@ class TestCloudflareNamespace(TestBase):
         assert response.json().get("success")
         self.namespaces.append(namespace_name)
 
+
+class TestCloudflareEmbeddingQuery(TestBase):
+    pass
