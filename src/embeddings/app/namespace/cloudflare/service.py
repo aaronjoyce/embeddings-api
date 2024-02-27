@@ -121,6 +121,7 @@ def delete_vector_index_by_name(client: API, namespace: str) -> NamespaceDelete:
         deletion_res = client.delete_vector_index_by_name(
             name=namespace
         )
+        # also need to check whether there's a corresponding table in d1
     except CloudFlare.exceptions.CloudFlareAPIError as ex:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

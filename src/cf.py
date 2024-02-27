@@ -2,19 +2,27 @@ from embeddings.app.lib.cloudflare.api import API
 from embeddings.app.lib.cloudflare.models import VectorPayloadItem
 from embeddings.app.lib.cloudflare.models import CreateDatabaseRecord
 
-from embeddings.app.lib.cloudflare.api import CloudflareEmbeddingModels
-
 from embeddings.app.config import settings
 
 
+api = API(
+    api_token=settings.CLOUDFLARE_API_TOKEN,
+    account_id=settings.CLOUDFLARE_API_ACCOUNT_ID
+)
+
+
+def delete_indexes():
+    results = api.list_vector_indexes()
+    print(("delete.results", results))
+
+    for index in results:
+        deletion_result = api.delete_vector_index_by_name(name=index.get('name'))
+        print(("index", index, deletion_result))
+
+
 def run():
-    api = API(
-        api_token=settings.CLOUDFLARE_API_TOKEN,
-        account_id=settings.CLOUDFLARE_API_ACCOUNT_ID
-    )
-
-
-
+    delete_indexes()
+    exit()
     # res = api.create_database_table(
     #     settings.CLOUDFLARE_D1_DATABASE_IDENTIFIER,
     #     "test3"
