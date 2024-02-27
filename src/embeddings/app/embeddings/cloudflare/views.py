@@ -20,7 +20,7 @@ client = API(
 
 
 @router.get("/{namespace}/{embedding_id}", response_model=EmbeddingRead)
-async def get(namespace: str, embedding_id: str, request: Request, response: Response):
+async def get(namespace: str, embedding_id: str, ):
     embedding_results = get_embeddings(
         client=client,
         namespace=namespace,
@@ -30,7 +30,7 @@ async def get(namespace: str, embedding_id: str, request: Request, response: Res
 
 
 @router.delete("/{namespace}/{embedding_id}", response_model=EmbeddingDelete)
-async def delete(namespace: str, embedding_id: str, request: Request, response: Response):
+async def delete(namespace: str, embedding_id: str, ):
     result = delete_embeddings(
         client=client,
         namespace=namespace,
@@ -42,7 +42,7 @@ async def delete(namespace: str, embedding_id: str, request: Request, response: 
 
 
 @router.post("/{namespace}", response_model=InsertionResult[EmbeddingRead])
-async def create(namespace: str, data_in: EmbeddingCreateMulti, request: Request, response: Response):
+async def create(namespace: str, data_in: EmbeddingCreateMulti, ):
     texts = [o.text for o in data_in.inputs]
 
     result = client.embed(

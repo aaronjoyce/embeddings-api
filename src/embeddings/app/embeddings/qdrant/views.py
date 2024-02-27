@@ -27,7 +27,7 @@ client = AsyncQdrantClient(host=settings.QDRANT_HOST, port=settings.QDRANT_HTTP_
 
 
 @router.get("/{namespace}/{embedding_id}", response_model=EmbeddingRead)
-async def get(namespace: str, embedding_id: str, request: Request, response: Response):
+async def get(namespace: str, embedding_id: str, ):
     return await get_embedding(
         client=client,
         namespace=namespace,
@@ -36,7 +36,7 @@ async def get(namespace: str, embedding_id: str, request: Request, response: Res
 
 
 @router.get("/{namespace}", response_model=EmbeddingPagination)
-async def list_embeddings(namespace: str, common: CommonParams, request: Request, response: Response):
+async def list_embeddings(namespace: str, common: CommonParams, ):
     return await embeddings(
         client=client,
         namespace=namespace,
@@ -45,7 +45,7 @@ async def list_embeddings(namespace: str, common: CommonParams, request: Request
 
 
 @router.post("/{namespace}", response_model=InsertionResult[EmbeddingRead])
-async def create(namespace: str, data_in: EmbeddingCreateMulti, request: Request, response: Response):
+async def create(namespace: str, data_in: EmbeddingCreateMulti, ):
     exists = await collection_exists(client, namespace)
     if not exists and not data_in.create_namespace:
         raise HTTPException(

@@ -33,7 +33,7 @@ client = AsyncQdrantClient(host=settings.QDRANT_HOST, port=settings.QDRANT_HTTP_
 
 
 @router.post("", response_model=NamespaceRead)
-async def create(data_in: NamespaceCreate, request: Request, response: Response):
+async def create(data_in: NamespaceCreate, ):
     result = await client.create_collection(
         collection_name=data_in.name,
         vectors_config=VectorParams(size=data_in.dimensionality, distance=data_in.distance),
@@ -42,7 +42,7 @@ async def create(data_in: NamespaceCreate, request: Request, response: Response)
 
 
 @router.post("/{namespace}/query", response_model=DocumentPagination)
-async def query(namespace: str, payload: NamespaceQuery, common: CommonParams, request: Request, response: Response):
+async def query(namespace: str, payload: NamespaceQuery, common: CommonParams, ):
     embedded_query_result = await cloudflare_aembed(model=CloudflareEmbeddingModels.BAAIBase.value, text=[payload.inputs])
     query_vectors = embedded_query_result.get('result', {}).get('data', [])
     query_vector = query_vectors[0]
@@ -61,7 +61,7 @@ async def query(namespace: str, payload: NamespaceQuery, common: CommonParams, r
 
 
 @router.get("/{namespace}", response_model=NamespaceRead, dependencies=[Depends(PermissionDependency([]))])
-async def get(namespace: str, request: Request, response: Response):
+async def get(namespace: str, ):
     try:
         return await get_namespace(namespace)
     except UnexpectedResponse as ex:
@@ -79,7 +79,7 @@ async def get(namespace: str, request: Request, response: Response):
 
 
 @router.delete("/{namespace}", response_model=NamespaceDelete)
-async def delete(namespace: str, request: Request, response: Response):
+async def delete(namespace: str, ):
     try:
         deletion_res = await client.delete_collection(
             collection_name=namespace

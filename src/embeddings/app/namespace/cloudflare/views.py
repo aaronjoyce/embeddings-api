@@ -32,12 +32,12 @@ client = API(
 
 
 @router.post("", response_model=NamespaceRead)
-async def create(data_in: NamespaceCreate, request: Request, response: Response):
+async def create(data_in: NamespaceCreate, ):
     return create_vector_index(client=client, data_in=data_in)
 
 
 @router.post("/{namespace}/query", response_model=DocumentPagination)
-async def query(namespace: str, data_in: NamespaceQuery, common: CommonParams, request: Request, response: Response):
+async def query(namespace: str, data_in: NamespaceQuery, common: CommonParams, ):
     matches = embedding_matches(client=client, namespace=namespace, data_in=data_in)
     results = vectors_by_ids(client=client, namespace=namespace, ids=[o.get("id") for o in matches])
     return paginated_query_results(
@@ -52,10 +52,10 @@ async def query(namespace: str, data_in: NamespaceQuery, common: CommonParams, r
     response_model=NamespaceRead,
     dependencies=[Depends(PermissionDependency([DefaultPermission]))]
 )
-async def get(namespace: str, response: Response):
+async def get(namespace: str):
     return vector_index_by_name(client=client, namespace=namespace)
 
 
 @router.delete("/{namespace}", response_model=NamespaceDelete)
-async def delete(namespace: str, request: Request, response: Response):
+async def delete(namespace: str, ):
     return delete_vector_index_by_name(client=client, namespace=namespace)
