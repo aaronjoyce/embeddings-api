@@ -7,7 +7,8 @@ from fastapi import status
 
 from embeddings.app.lib.cloudflare.api import API
 
-from .models import NamespaceCreate, NamespaceRead, NamespaceQuery, NamespaceDelete
+from .models import NamespaceCreate, NamespaceRead, NamespaceDelete
+from ..models import NamespaceQuery
 
 from embeddings.app.document.models import DocumentRead, DocumentPagination
 

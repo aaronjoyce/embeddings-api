@@ -1,3 +1,5 @@
+from typing import Optional, Dict, Any
+
 from pydantic import BaseModel
 from pydantic import Field
 
@@ -8,11 +10,6 @@ from qdrant_client.http.models import CollectionStatus
 
 class NamespaceBaseModel(BaseModel):
     name: str
-
-
-class NamespaceCreate(NamespaceBaseModel):
-    dimensionality: int = Field(default=1024)
-    distance: Distance = Field(default=Distance.DOT)
 
 
 class NamespaceDelete(BaseModel):
@@ -32,3 +29,7 @@ class NamespaceRead(NamespaceBaseModel):
 
 class NamespaceQuery(BaseModel):
     inputs: str
+    return_vectors: Optional[bool] = False
+    return_metadata: Optional[bool] = False
+    limit: Optional[int] = Field(default=5, gt=0)
+    filter: Optional[Dict[str, Any]] = Field(default=None)

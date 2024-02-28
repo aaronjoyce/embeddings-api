@@ -6,11 +6,9 @@ from embeddings.app.lib.cloudflare.models import ModelPreset
 
 from embeddings.app.lib.cloudflare.api import CloudflareEmbeddingModels
 
+from ..models import NamespaceBaseModel
+
 Metric = Literal["cosine", "euclidean", "dot-product"]
-
-
-class NamespaceBaseModel(BaseModel):
-    name: str
 
 
 class NamespaceCreate(NamespaceBaseModel):
@@ -30,11 +28,3 @@ class NamespaceRead(NamespaceBaseModel):
     vectors_count: Optional[int] = None
     points_count: Optional[int] = None
 
-
-class NamespaceQuery(BaseModel):
-    inputs: str
-    return_vectors: Optional[bool] = False
-    return_metadata: Optional[bool] = False
-    limit: Optional[int] = Field(default=5, gt=0)
-    filter: Optional[Dict[str, Any]] = Field(default=None)
-    

@@ -11,11 +11,18 @@ from .main import app
 
 client = TestClient(app)
 
+
 CREATE_CLOUDFLARE_NAMESPACE_PATH = "/api/v1/namespace/cloudflare"
 CREATE_CLOUDFLARE_EMBEDDING_PATH = "/api/v1/embeddings/cloudflare"
-CLOUDFLARE_EMBEDDING_PATH = "/api/v1/embeddings/cloudflare/{namespace}/{embedding_id}"
+RETRIEVE_DELETE_CLOUDFLARE_EMBEDDING_PATH = "/api/v1/embeddings/cloudflare/{namespace}/{embedding_id}"
 DELETE_CLOUDFLARE_NAMESPACE_PATH = "/api/v1/namespace/cloudflare/{namespace}"
 QUERY_CLOUDFLARE_NAMESPACE_PATH = "/api/v1/namespace/cloudflare/{namespace}/query"
+
+CREATE_QDRANT_NAMESPACE_PATH = "/api/v1/namespace/qdrant"
+CREATE_QDRANT_EMBEDDING_PATH = "/api/v1/embeddings/qdrant"
+RETRIEVE_DELETE_QDRANT_EMBEDDING_PATH = "/api/v1/embeddings/qdrant/{namespace}/{embedding_id}"
+DELETE_QDRANT_NAMESPACE_PATH = "/api/v1/namespace/qdrant/{namespace}"
+QUERY_QDRANT_NAMESPACE_PATH = "/api/v1/namespace/qdrant/{namespace}/query"
 
 
 EMBEDDING_TEXT = "sample text"
@@ -48,6 +55,20 @@ class NamespaceClient:
         return response
 
 
+def create_qdrant_namespace(name: str, dimensionality: int = 768, distance: str = None):
+    data = {
+        "dimensionality": dimensionality,
+        "name": name,
+    }
+    if distance is not None:
+        data["distance"] = distance
+
+    return client.post(
+        url=CREATE_QDRANT_NAMESPACE_PATH,
+        json=data
+    )
+
+
 def create_cloudflare_namespace(name: str, preset: str = None):
     data = {
         "name": name
@@ -57,6 +78,32 @@ def create_cloudflare_namespace(name: str, preset: str = None):
 
     response = client.post(
         url=CREATE_CLOUDFLARE_NAMESPACE_PATH,
+        json=data
+    )
+    return response
+
+
+def create_qdrant_embedding(
+    namespace: str,
+    text: str,
+    persist_source: bool = True,
+    create_namespace: bool = True,
+    embedding_model: str = None,
+    payload: Dict[str, Any] = None
+):
+    data = {
+        "inputs": [{
+            "text": text,
+            "persist_source": persist_source,
+            "payload": payload if payload else None,
+        }],
+        "create_namespace": create_namespace
+    }
+    if embedding_model is not None:
+        data["embedding_model"] = embedding_model
+
+    response = client.post(
+        url=f"{CREATE_QDRANT_EMBEDDING_PATH}/{namespace}",
         json=data
     )
     return response
@@ -183,7 +230,7 @@ class TestCloudflareEmbedding(TestBase):
         response_error_message = response.json().get("detail")[0].get("msg")
         assert bool(re.match(r"vector index with name", response_error_message.lower()))
 
-    def test_create_cloudflare_embedding_payload(self):
+    def test_create_payload(self):
         namespace_name = generate_namespace_name()
 
         embedding_payload = {
@@ -203,7 +250,7 @@ class TestCloudflareEmbedding(TestBase):
         created_embedding_item = create_response_json.get("items", [])[0]
 
         response = client.get(
-            url=CLOUDFLARE_EMBEDDING_PATH.format(
+            url=RETRIEVE_DELETE_CLOUDFLARE_EMBEDDING_PATH.format(
                 namespace=namespace_name,
                 embedding_id=created_embedding_item.get("id")
             ),
@@ -225,7 +272,7 @@ class TestCloudflareEmbedding(TestBase):
         created_embedding_json = create_response_json.get("items", [])[0]
 
         response = client.get(
-            url=CLOUDFLARE_EMBEDDING_PATH.format(
+            url=RETRIEVE_DELETE_CLOUDFLARE_EMBEDDING_PATH.format(
                 namespace=namespace_name,
                 embedding_id=created_embedding_json.get("id")
             ),
@@ -247,14 +294,13 @@ class TestCloudflareEmbedding(TestBase):
         created_embedding_item = create_response_json.get("items", [])[0]
 
         response = client.delete(
-            url=CLOUDFLARE_EMBEDDING_PATH.format(
+            url=RETRIEVE_DELETE_CLOUDFLARE_EMBEDDING_PATH.format(
                 namespace=namespace_name,
                 embedding_id=created_embedding_item.get("id")
             )
         )
         assert response.status_code == status.HTTP_200_OK
         assert response.json().get("success")
-        self.namespaces.append(namespace_name)
 
 
 class TestCloudflareNamespace(TestBase):
@@ -380,3 +426,181 @@ class TestCloudflareEmbeddingQuery(TestBase):
             raise Exception(response.text)
 
         assert not any([o.get("id") == self.embedding_id for o in response.json().get('items', [])])
+
+
+class TestQdrantBase:
+
+    namespaces: List[str] = []
+
+    def setup_method(self):
+        self.namespaces = []
+
+    def teardown_method(self):
+        for namespace in self.namespaces:
+            client.delete(
+                url=DELETE_QDRANT_NAMESPACE_PATH.format(
+                    namespace=namespace
+                )
+            )
+
+
+class TestQdrantNamespace(TestQdrantBase):
+
+    def test_create(self):
+        namespace_name = generate_namespace_name()
+        response = create_qdrant_namespace(
+            name=namespace_name,
+        )
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json().get("name") == namespace_name
+        self.namespaces.append(namespace_name)
+
+    def test_create_dimensionality(self):
+        namespace_name = generate_namespace_name()
+        dimensionality = 512
+        response = create_qdrant_namespace(
+            name=namespace_name,
+            dimensionality=dimensionality
+        )
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json().get("dimensionality") == dimensionality
+
+        self.namespaces.append(namespace_name)
+
+    def test_create_distance(self):
+        namespace_name = generate_namespace_name()
+        distance = "Euclid"
+        response = create_qdrant_namespace(
+            name=namespace_name,
+            distance=distance
+        )
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json().get("distance") == distance
+
+        self.namespaces.append(namespace_name)
+
+    def test_delete(self):
+        namespace_name = generate_namespace_name()
+        create_qdrant_namespace(
+            name=namespace_name,
+        )
+        delete_response = client.delete(
+            url=DELETE_QDRANT_NAMESPACE_PATH.format(
+                namespace=namespace_name
+            ),
+        )
+        assert delete_response.status_code == status.HTTP_200_OK
+
+
+class TestQdrantEmbedding(TestQdrantBase):
+
+    def test_create_existing_namespace(self):
+        # first, create a namespace
+        namespace_name = generate_namespace_name()
+
+        response = create_qdrant_namespace(
+            name=namespace_name
+        )
+        assert response.status_code == status.HTTP_200_OK
+
+        response = create_qdrant_embedding(
+            namespace=namespace_name,
+            text=EMBEDDING_TEXT,
+            persist_source=True,
+            create_namespace=False,
+        )
+        assert response.status_code == status.HTTP_200_OK
+        self.namespaces.append(namespace_name)
+
+    def test_create_non_existing_namespace_auto_create(self):
+        namespace_name = generate_namespace_name()
+        response = create_qdrant_embedding(
+            namespace=namespace_name,
+            text=EMBEDDING_TEXT,
+            persist_source=True,
+            create_namespace=True,
+        )
+        assert response.status_code == status.HTTP_200_OK
+        self.namespaces.append(namespace_name)
+
+    def test_create_non_existing_namespace_no_create(self):
+        namespace_name = generate_namespace_name()
+        response = create_qdrant_embedding(
+            namespace=namespace_name,
+            text=EMBEDDING_TEXT,
+            persist_source=True,
+            create_namespace=False,
+        )
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+        response_error_message = response.json().get("detail")[0].get("msg")
+        assert bool(re.match(r"collection with name", response_error_message.lower()))
+
+    def test_create_payload(self):
+        namespace_name = generate_namespace_name()
+
+        embedding_payload = {
+            "a": 1,
+            "b": 2
+        }
+        response = create_qdrant_embedding(
+            namespace=namespace_name,
+            text=EMBEDDING_TEXT,
+            persist_source=True,
+            create_namespace=True,
+            payload=embedding_payload
+        )
+        assert response.status_code == status.HTTP_200_OK
+        created_embedding_item = response.json().get("items", [])[0]
+
+        response = client.get(
+            url=RETRIEVE_DELETE_QDRANT_EMBEDDING_PATH.format(
+                namespace=namespace_name,
+                embedding_id=created_embedding_item.get("id")
+            ),
+        )
+        assert response.json().get("payload") == embedding_payload
+        self.namespaces.append(namespace_name)
+
+    # def test_create_source(self):
+    #     namespace_name = generate_namespace_name()
+    #     response = create_qdrant_embedding(
+    #         namespace=namespace_name,
+    #         text=EMBEDDING_TEXT,
+    #         persist_source=True,
+    #         create_namespace=True,
+    #     )
+    #     assert response.status_code == status.HTTP_200_OK
+    #
+    #     create_response_json = response.json()
+    #     created_embedding_json = create_response_json.get("items", [])[0]
+    #
+    #     response = client.get(
+    #         url=RETRIEVE_DELETE_QDRANT_EMBEDDING_PATH.format(
+    #             namespace=namespace_name,
+    #             embedding_id=created_embedding_json.get("id")
+    #         ),
+    #     )
+    #     assert response.json().get("source") == EMBEDDING_TEXT
+    #     self.namespaces.append(namespace_name)
+
+    def test_delete(self):
+        namespace_name = generate_namespace_name()
+        response = create_qdrant_embedding(
+            namespace=namespace_name,
+            text=EMBEDDING_TEXT,
+            persist_source=True,
+            create_namespace=True,
+        )
+        assert response.status_code == status.HTTP_200_OK
+        created_embedding_item = response.json().get("items", [])[0]
+
+        response = client.delete(
+            url=RETRIEVE_DELETE_QDRANT_EMBEDDING_PATH.format(
+                namespace=namespace_name,
+                embedding_id=created_embedding_item.get("id")
+            )
+        )
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json().get("success")
+

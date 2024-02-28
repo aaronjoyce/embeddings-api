@@ -4,8 +4,9 @@ from .models import (
     NamespaceCreate,
     NamespaceRead,
     NamespaceDelete,
-    NamespaceQuery
 )
+
+from ..models import NamespaceQuery
 
 from embeddings.app.permissions.auth import PermissionDependency, DefaultPermission
 from embeddings.app.document.models import DocumentPagination

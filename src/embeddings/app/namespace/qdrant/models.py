@@ -2,12 +2,9 @@ from pydantic import BaseModel
 from pydantic import Field
 
 from qdrant_client.http.models import Distance
-
 from qdrant_client.http.models import CollectionStatus
 
-
-class NamespaceBaseModel(BaseModel):
-    name: str
+from ..models import NamespaceBaseModel
 
 
 class NamespaceCreate(NamespaceBaseModel):
@@ -28,7 +25,3 @@ class NamespaceRead(NamespaceBaseModel):
     write_consistency_factor: int
     vectors_count: int
     points_count: int
-
-
-class NamespaceQuery(BaseModel):
-    inputs: str

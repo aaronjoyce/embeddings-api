@@ -1,15 +1,17 @@
 import re
 
+from typing import List
+
 from fastapi import status, HTTPException
 from qdrant_client.async_qdrant_client import AsyncQdrantClient
 from qdrant_client.http.exceptions import UnexpectedResponse
 from qdrant_client.conversions import common_types
 from qdrant_client.http.models import UpdateStatus
+from qdrant_client.models import PointIdsList
 
-from ..models import EmbeddingRead, EmbeddingPagination, EmbeddingCreateMulti
+from ..models import EmbeddingRead, EmbeddingPagination, EmbeddingCreateMulti, EmbeddingDelete
 
 from embeddings.app.lib.cloudflare.api import API, DIMENSIONALITY_PRESETS
-from embeddings.app.lib.cloudflare.api import CloudflareEmbeddingModels
 
 from embeddings.app.lib.cloudflare.models import CreateDatabaseRecord
 
@@ -30,11 +32,14 @@ async def embedding(client: AsyncQdrantClient, namespace: str, embedding_id: str
         result = await client.retrieve(
             collection_name=namespace,
             ids=[embedding_id],
-            with_vectors=False,
+            with_vectors=True,
             with_payload=True
         )
+
         return EmbeddingRead(
-            id=result[0].id
+            id=result[0].id,
+            payload=result[0].payload,
+            vector=result[0].vector
         )
     except UnexpectedResponse as ex:
         if ex.status_code == status.HTTP_404_NOT_FOUND:
@@ -131,4 +136,16 @@ async def insert_embedding(
     return InsertionResult[EmbeddingRead](
         count=len(items),
         items=items
+    )
+
+
+async def delete_embeddings(client: AsyncQdrantClient, namespace: str, embedding_ids: List[str]) -> EmbeddingDelete:
+    response = await client.delete(
+        collection_name=namespace,
+        points_selector=PointIdsList(
+            points=embedding_ids
+        )
+    )
+    return EmbeddingDelete(
+        success=True
     )
