@@ -104,11 +104,11 @@ def query(namespace: str, inputs: str):
 
 
 def run():
-    # insertion_text = ["this is some sample text"]
-    # res = create_embedding(namespace=NAMESPACE_NAME, text=insertion_text[0])
-    # print(("cloudflare.embedding.create", res))
+    insertion_text = ["sample text"]
+    res = create_embedding(namespace=NAMESPACE_NAME, text=insertion_text[0])
+    print(("cloudflare.embedding.create", res))
 
-    res = query(namespace=NAMESPACE_NAME, inputs="sample text")
+    res = query(namespace=NAMESPACE_NAME, inputs="abc")
     print(("cloudflare.query.res", res, res.json()))
 
     exit()

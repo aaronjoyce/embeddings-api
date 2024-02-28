@@ -15,6 +15,7 @@ CREATE_CLOUDFLARE_NAMESPACE_PATH = "/api/v1/namespace/cloudflare"
 CREATE_CLOUDFLARE_EMBEDDING_PATH = "/api/v1/embeddings/cloudflare"
 CLOUDFLARE_EMBEDDING_PATH = "/api/v1/embeddings/cloudflare/{namespace}/{embedding_id}"
 DELETE_CLOUDFLARE_NAMESPACE_PATH = "/api/v1/namespace/cloudflare/{namespace}"
+QUERY_CLOUDFLARE_NAMESPACE_PATH = "/api/v1/namespace/cloudflare/{namespace}/query"
 
 
 EMBEDDING_TEXT = "sample text"
@@ -82,6 +83,29 @@ def create_cloudflare_embedding(
 
     response = client.post(
         url=f"{CREATE_CLOUDFLARE_EMBEDDING_PATH}/{namespace}",
+        json=data
+    )
+    return response
+
+
+def query_cloudflare_namespace(
+    text: str,
+    namespace: str,
+    metadata_filter: Dict[str, Any] = None
+):
+    data = {
+        "inputs": text,
+        "return_vectors": True,
+        "return_metadata": True,
+        "limit": 1,
+    }
+    if metadata_filter is not None:
+        data["filter"] = metadata_filter
+
+    response = client.post(
+        url=QUERY_CLOUDFLARE_NAMESPACE_PATH.format(
+            namespace=namespace
+        ),
         json=data
     )
     return response
@@ -292,4 +316,67 @@ class TestCloudflareNamespace(TestBase):
 
 
 class TestCloudflareEmbeddingQuery(TestBase):
-    pass
+
+    def setup_method(self):
+        super().setup_method()
+
+        namespace = generate_namespace_name()
+        # write data to the vector store
+        response = create_cloudflare_embedding(
+            namespace=namespace,
+            text=EMBEDDING_TEXT,
+            persist_source=True,
+            create_namespace=True,
+            payload={
+                'a': 1,
+                'b': 2
+            }
+        )
+        self.embedding_id = response.json().get("items", [])[0].get("id")
+        self.namespaces.append(namespace)
+
+    def test_query_match(self):
+        namespace = self.namespaces[0]
+
+        response = query_cloudflare_namespace(
+            namespace=namespace,
+            text=EMBEDDING_TEXT,
+        )
+        try:
+            assert response.status_code == status.HTTP_200_OK
+        except Exception as ex:
+            raise Exception(response.text)
+
+        assert any([o.get("id") == self.embedding_id for o in response.json().get('items', [])])
+
+    def test_query_metadata_filter_match(self):
+        namespace = self.namespaces[0]
+        response = query_cloudflare_namespace(
+            namespace=namespace,
+            text=EMBEDDING_TEXT,
+            metadata_filter={
+                "a": 1
+            }
+        )
+        try:
+            assert response.status_code == status.HTTP_200_OK
+        except Exception as ex:
+            raise Exception(response.text)
+
+        assert any([o.get("id") == self.embedding_id for o in response.json().get('items', [])])
+
+    def test_query_metadata_filter_not_match(self):
+        namespace = self.namespaces[0]
+        response = query_cloudflare_namespace(
+            namespace=namespace,
+            text=EMBEDDING_TEXT,
+            metadata_filter={
+                "a": 2
+            }
+        )
+        try:
+            assert response.status_code == status.HTTP_200_OK
+        except Exception as ex:
+            raise Exception(response.text)
+
+        assert not any([o.get("id") == self.embedding_id for o in response.json().get('items', [])])
