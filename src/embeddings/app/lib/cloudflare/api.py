@@ -96,7 +96,6 @@ class API:
             "vector": vector,
             "topK": top_k,
             "returnMetadata": return_metadata,
-            "filter": filter
         }
         if return_vectors:
             data["returnValues"] = True
