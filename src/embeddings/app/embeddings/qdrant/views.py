@@ -1,6 +1,4 @@
 from fastapi import APIRouter
-from fastapi import Request
-from fastapi import Response
 from fastapi import HTTPException
 
 from ..models import EmbeddingRead, EmbeddingCreateMulti, EmbeddingPagination, EmbeddingDelete
@@ -9,12 +7,12 @@ from qdrant_client.async_qdrant_client import AsyncQdrantClient
 from qdrant_client.http.models import Distance, VectorParams
 from embeddings.app.deps.request_params import CommonParams
 
-from .service import embedding as get_embedding
 from .service import (
-    insert_embedding,
+    insert,
     collection_exists,
     embeddings,
-    delete_embeddings
+    delete,
+    embedding
 )
 
 from embeddings.models import InsertionResult
@@ -26,9 +24,9 @@ router = APIRouter(prefix="/embeddings/qdrant")
 
 
 @router.get("/{namespace}/{embedding_id}", response_model=EmbeddingRead)
-async def get(namespace: str, embedding_id: str, ):
+async def get_embedding(namespace: str, embedding_id: str, ):
     client = AsyncQdrantClient(host=settings.QDRANT_HOST, port=settings.QDRANT_HTTP_PORT)
-    return await get_embedding(
+    return await embedding(
         client=client,
         namespace=namespace,
         embedding_id=embedding_id
@@ -36,7 +34,7 @@ async def get(namespace: str, embedding_id: str, ):
 
 
 @router.get("/{namespace}", response_model=EmbeddingPagination)
-async def list_embeddings(namespace: str, common: CommonParams, ):
+async def get_embeddings(namespace: str, common: CommonParams, ):
     client = AsyncQdrantClient(host=settings.QDRANT_HOST, port=settings.QDRANT_HTTP_PORT)
     return await embeddings(
         client=client,
@@ -46,7 +44,7 @@ async def list_embeddings(namespace: str, common: CommonParams, ):
 
 
 @router.post("/{namespace}", response_model=InsertionResult[EmbeddingRead])
-async def create(namespace: str, data_in: EmbeddingCreateMulti, ):
+async def create_embedding(namespace: str, data_in: EmbeddingCreateMulti, ):
     client = AsyncQdrantClient(host=settings.QDRANT_HOST, port=settings.QDRANT_HTTP_PORT)
     exists = await collection_exists(client, namespace)
     if not exists and not data_in.create_namespace:
@@ -64,7 +62,7 @@ async def create(namespace: str, data_in: EmbeddingCreateMulti, ):
             ),
         )
 
-    res = await insert_embedding(
+    res = await insert(
         client=client,
         data_in=data_in,
         namespace=namespace,
@@ -73,9 +71,9 @@ async def create(namespace: str, data_in: EmbeddingCreateMulti, ):
 
 
 @router.delete("/{namespace}/{embedding_id}", response_model=EmbeddingDelete)
-async def delete(namespace: str, embedding_id: str, ):
+async def delete_embedding(namespace: str, embedding_id: str, ):
     client = AsyncQdrantClient(host=settings.QDRANT_HOST, port=settings.QDRANT_HTTP_PORT)
-    return await delete_embeddings(
+    return await delete(
         client=client,
         namespace=namespace,
         embedding_ids=[embedding_id]

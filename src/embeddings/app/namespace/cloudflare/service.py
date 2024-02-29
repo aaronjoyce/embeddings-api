@@ -10,6 +10,8 @@ from embeddings.app.lib.cloudflare.api import API
 from .models import NamespaceCreate, NamespaceRead, NamespaceDelete
 from ..models import NamespaceQuery
 
+from embeddings.app.embeddings.utils import source_key
+
 from embeddings.app.document.models import DocumentRead, DocumentPagination
 
 from embeddings.app.lib.cloudflare.api import CloudflareEmbeddingModels, ERROR_CODE_VECTOR_INDEX_NOT_FOUND
@@ -19,7 +21,7 @@ from embeddings.app.config import settings
 from embeddings.app.deps.request_params import CommonParams
 
 
-def create_vector_index(client: API, data_in: NamespaceCreate) -> NamespaceRead:
+def create(client: API, data_in: NamespaceCreate) -> NamespaceRead:
     res = client.create_vector_index(
         name=data_in.name,
         preset=data_in.preset
@@ -74,7 +76,7 @@ def vectors_by_ids(client: API, namespace: str, ids: List[str]) -> List[Dict[str
     return results
 
 
-def paginated_query_results(results: List, matches: List, common: CommonParams) -> DocumentPagination:
+def paginated_query_results(matches: List, common: CommonParams) -> DocumentPagination:
     data = {
         "items": [
             DocumentRead(
@@ -82,8 +84,8 @@ def paginated_query_results(results: List, matches: List, common: CommonParams) 
                 payload=vector.get('metadata'),
                 score=vector.get('score'),
                 vector=vector.get('values'),
-                source=d1_record.get('source')
-            ) for vector, d1_record in zip(matches, results)
+                source=vector.get('metadata').pop(source_key(), None)
+            ) for vector in matches
         ],
         "total": len(matches),
         "page": common.get("page"),

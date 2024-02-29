@@ -12,6 +12,7 @@ from qdrant_client.models import PointIdsList
 from ..models import EmbeddingRead, EmbeddingPagination, EmbeddingCreateMulti, EmbeddingDelete
 
 from embeddings.app.lib.cloudflare.api import API, DIMENSIONALITY_PRESETS
+from embeddings.app.embeddings.utils import source_key
 
 from embeddings.app.lib.cloudflare.models import CreateDatabaseRecord
 
@@ -39,7 +40,8 @@ async def embedding(client: AsyncQdrantClient, namespace: str, embedding_id: str
         return EmbeddingRead(
             id=result[0].id,
             payload=result[0].payload,
-            vector=result[0].vector
+            vector=result[0].vector,
+            source=result[0].payload.pop(source_key(), None)
         )
     except UnexpectedResponse as ex:
         if ex.status_code == status.HTTP_404_NOT_FOUND:
@@ -74,7 +76,7 @@ async def collection_exists(client: AsyncQdrantClient, namespace: str) -> bool:
     return True
 
 
-async def insert_embedding(
+async def insert(
         client: AsyncQdrantClient,
         namespace: str,
         data_in: EmbeddingCreateMulti,
@@ -139,7 +141,7 @@ async def insert_embedding(
     )
 
 
-async def delete_embeddings(client: AsyncQdrantClient, namespace: str, embedding_ids: List[str]) -> EmbeddingDelete:
+async def delete(client: AsyncQdrantClient, namespace: str, embedding_ids: List[str]) -> EmbeddingDelete:
     response = await client.delete(
         collection_name=namespace,
         points_selector=PointIdsList(

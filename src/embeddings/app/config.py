@@ -25,5 +25,8 @@ class Settings(BaseSettings):
     # Optional authentication
     ADMIN_SECRET_KEY: Optional[str] = None
 
+    # Optional namespace key
+    NAMESPACE: Optional[str] = "synapse"
+
 
 settings = Settings()

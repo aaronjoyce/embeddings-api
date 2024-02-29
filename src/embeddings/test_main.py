@@ -12,13 +12,13 @@ from .main import app
 client = TestClient(app)
 
 
-CREATE_CLOUDFLARE_NAMESPACE_PATH = "/api/v1/namespace/cloudflare"
+CLOUDFLARE_NAMESPACE_PATH = "/api/v1/namespace/cloudflare"
 CREATE_CLOUDFLARE_EMBEDDING_PATH = "/api/v1/embeddings/cloudflare"
 RETRIEVE_DELETE_CLOUDFLARE_EMBEDDING_PATH = "/api/v1/embeddings/cloudflare/{namespace}/{embedding_id}"
 DELETE_CLOUDFLARE_NAMESPACE_PATH = "/api/v1/namespace/cloudflare/{namespace}"
 QUERY_CLOUDFLARE_NAMESPACE_PATH = "/api/v1/namespace/cloudflare/{namespace}/query"
 
-CREATE_QDRANT_NAMESPACE_PATH = "/api/v1/namespace/qdrant"
+QDRANT_NAMESPACE_PATH = "/api/v1/namespace/qdrant"
 CREATE_QDRANT_EMBEDDING_PATH = "/api/v1/embeddings/qdrant"
 RETRIEVE_DELETE_QDRANT_EMBEDDING_PATH = "/api/v1/embeddings/qdrant/{namespace}/{embedding_id}"
 DELETE_QDRANT_NAMESPACE_PATH = "/api/v1/namespace/qdrant/{namespace}"
@@ -40,7 +40,7 @@ class NamespaceClient:
             data["preset"] = preset
 
         response = client.post(
-            url=CREATE_CLOUDFLARE_NAMESPACE_PATH,
+            url=CLOUDFLARE_NAMESPACE_PATH,
             json=data
         )
         self.namespace = name
@@ -64,7 +64,7 @@ def create_qdrant_namespace(name: str, dimensionality: int = 768, distance: str 
         data["distance"] = distance
 
     return client.post(
-        url=CREATE_QDRANT_NAMESPACE_PATH,
+        url=QDRANT_NAMESPACE_PATH,
         json=data
     )
 
@@ -77,7 +77,7 @@ def create_cloudflare_namespace(name: str, preset: str = None):
         data["preset"] = preset
 
     response = client.post(
-        url=CREATE_CLOUDFLARE_NAMESPACE_PATH,
+        url=CLOUDFLARE_NAMESPACE_PATH,
         json=data
     )
     return response
@@ -86,7 +86,7 @@ def create_cloudflare_namespace(name: str, preset: str = None):
 def create_qdrant_embedding(
     namespace: str,
     text: str,
-    persist_source: bool = True,
+    persist_original: bool = True,
     create_namespace: bool = True,
     embedding_model: str = None,
     payload: Dict[str, Any] = None
@@ -94,7 +94,7 @@ def create_qdrant_embedding(
     data = {
         "inputs": [{
             "text": text,
-            "persist_source": persist_source,
+            "persist_original": persist_original,
             "payload": payload if payload else None,
         }],
         "create_namespace": create_namespace
@@ -112,7 +112,7 @@ def create_qdrant_embedding(
 def create_cloudflare_embedding(
         namespace: str,
         text: str,
-        persist_source: bool = True,
+        persist_original: bool = True,
         create_namespace: bool = True,
         embedding_model: str = None,
         payload: Dict[str, Any] = None,
@@ -120,7 +120,7 @@ def create_cloudflare_embedding(
     data = {
         "inputs": [{
             "text": text,
-            "persist_source": persist_source,
+            "persist_original": persist_original,
             "payload": payload if payload is not None else {}
         }],
         "create_namespace": create_namespace,
@@ -194,7 +194,7 @@ class TestCloudflareEmbedding(TestBase):
         response = create_cloudflare_embedding(
             namespace=namespace_name,
             text=EMBEDDING_TEXT,
-            persist_source=True,
+            persist_original=True,
             create_namespace=False,
             embedding_model=embedding_model
         )
@@ -207,7 +207,7 @@ class TestCloudflareEmbedding(TestBase):
         response = create_cloudflare_embedding(
             namespace=namespace_name,
             text=EMBEDDING_TEXT,
-            persist_source=True,
+            persist_original=True,
             create_namespace=True,
             embedding_model=embedding_model
         )
@@ -221,7 +221,7 @@ class TestCloudflareEmbedding(TestBase):
         response = create_cloudflare_embedding(
             namespace=namespace_name,
             text=EMBEDDING_TEXT,
-            persist_source=True,
+            persist_original=True,
             create_namespace=False,
             embedding_model=embedding_model
         )
@@ -240,7 +240,7 @@ class TestCloudflareEmbedding(TestBase):
         response = create_cloudflare_embedding(
             namespace=namespace_name,
             text=EMBEDDING_TEXT,
-            persist_source=True,
+            persist_original=True,
             create_namespace=True,
             payload=embedding_payload
         )
@@ -263,7 +263,7 @@ class TestCloudflareEmbedding(TestBase):
         response = create_cloudflare_embedding(
             namespace=namespace_name,
             text=EMBEDDING_TEXT,
-            persist_source=True,
+            persist_original=True,
             create_namespace=True,
         )
         assert response.status_code == status.HTTP_200_OK
@@ -285,7 +285,7 @@ class TestCloudflareEmbedding(TestBase):
         response = create_cloudflare_embedding(
             namespace=namespace_name,
             text=EMBEDDING_TEXT,
-            persist_source=True,
+            persist_original=True,
             create_namespace=True,
         )
         assert response.status_code == status.HTTP_200_OK
@@ -342,7 +342,7 @@ class TestCloudflareNamespace(TestBase):
         namespace_name = generate_namespace_name()
 
         response = client.post(
-            url=CREATE_CLOUDFLARE_NAMESPACE_PATH,
+            url=CLOUDFLARE_NAMESPACE_PATH,
             json={
                 "preset": str(CloudflareEmbeddingModels.BAAISmall),
                 "name": namespace_name
@@ -371,7 +371,7 @@ class TestCloudflareEmbeddingQuery(TestBase):
         response = create_cloudflare_embedding(
             namespace=namespace,
             text=EMBEDDING_TEXT,
-            persist_source=True,
+            persist_original=True,
             create_namespace=True,
             payload={
                 'a': 1,
@@ -491,6 +491,22 @@ class TestQdrantNamespace(TestQdrantBase):
         )
         assert delete_response.status_code == status.HTTP_200_OK
 
+    def test_list(self):
+        namespace_name = generate_namespace_name()
+
+        response = client.post(
+            url=QDRANT_NAMESPACE_PATH,
+            json={
+                "name": namespace_name
+            }
+        )
+        assert response.status_code == status.HTTP_200_OK
+
+        response = client.get(
+            url=QDRANT_NAMESPACE_PATH,
+        )
+        assert any([o.get('name') == namespace_name for o in response.json().get('items')])
+
 
 class TestQdrantEmbedding(TestQdrantBase):
 
@@ -506,7 +522,7 @@ class TestQdrantEmbedding(TestQdrantBase):
         response = create_qdrant_embedding(
             namespace=namespace_name,
             text=EMBEDDING_TEXT,
-            persist_source=True,
+            persist_original=True,
             create_namespace=False,
         )
         assert response.status_code == status.HTTP_200_OK
@@ -517,7 +533,7 @@ class TestQdrantEmbedding(TestQdrantBase):
         response = create_qdrant_embedding(
             namespace=namespace_name,
             text=EMBEDDING_TEXT,
-            persist_source=True,
+            persist_original=True,
             create_namespace=True,
         )
         assert response.status_code == status.HTTP_200_OK
@@ -528,7 +544,7 @@ class TestQdrantEmbedding(TestQdrantBase):
         response = create_qdrant_embedding(
             namespace=namespace_name,
             text=EMBEDDING_TEXT,
-            persist_source=True,
+            persist_original=True,
             create_namespace=False,
         )
         assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -546,7 +562,7 @@ class TestQdrantEmbedding(TestQdrantBase):
         response = create_qdrant_embedding(
             namespace=namespace_name,
             text=EMBEDDING_TEXT,
-            persist_source=True,
+            persist_original=True,
             create_namespace=True,
             payload=embedding_payload
         )
@@ -567,7 +583,7 @@ class TestQdrantEmbedding(TestQdrantBase):
     #     response = create_qdrant_embedding(
     #         namespace=namespace_name,
     #         text=EMBEDDING_TEXT,
-    #         persist_source=True,
+    #         persist_original=True,
     #         create_namespace=True,
     #     )
     #     assert response.status_code == status.HTTP_200_OK
@@ -589,7 +605,7 @@ class TestQdrantEmbedding(TestQdrantBase):
         response = create_qdrant_embedding(
             namespace=namespace_name,
             text=EMBEDDING_TEXT,
-            persist_source=True,
+            persist_original=True,
             create_namespace=True,
         )
         assert response.status_code == status.HTTP_200_OK

@@ -60,7 +60,7 @@ def create_embedding(namespace: str, text: str):
         "inputs": [{
             "id": str(uuid.uuid4()),
             "text": text,
-            "persist_source": True,
+            "persist_original": True,
             "payload": {
                 "test1": 1
             }

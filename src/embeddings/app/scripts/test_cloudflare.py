@@ -49,12 +49,20 @@ def delete_embedding(namespace: str, embedding_id: str):
     return res.json()
 
 
+def list_embeddings(namespace: str):
+    res = requests.get(
+        url=url(path=f"/embeddings/cloudflare/{namespace}"),
+        headers=headers()
+    )
+    print(("res", res))
+    return res.json()
+
 def create_embedding(namespace: str, text: str):
     json_data = {
         "inputs": [{
             "id": str(uuid.uuid4()),
             "text": text,
-            "persist_source": True,
+            "persist_original": True,
             "payload": {
                 "test1": 1
             }
@@ -104,9 +112,12 @@ def query(namespace: str, inputs: str):
 
 
 def run():
+    list_embeddings(NAMESPACE_NAME)
+    exit()
     insertion_text = ["sample text"]
     res = create_embedding(namespace=NAMESPACE_NAME, text=insertion_text[0])
     print(("cloudflare.embedding.create", res))
+    exit()
 
     res = query(namespace=NAMESPACE_NAME, inputs="abc")
     print(("cloudflare.query.res", res, res.json()))

@@ -25,19 +25,11 @@ class EmbeddingPagination(Pagination):
     items: List[EmbeddingRead]
 
 
-class EmbeddingsCreate(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    text: List[str]
-    payload: Optional[Dict[str, Any]] = Field(default_factory=dict)
-    create_index: Optional[bool] = Field(default=False)
-    persist_decoded: Optional[bool] = Field(default=False)
-
-
 class EmbeddingsCreateSingle(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     text: str
     payload: Optional[Dict[str, Any]] = Field(default_factory=dict)
-    persist_source: Optional[bool] = Field(default=False)
+    persist_original: Optional[bool] = Field(default=False)
 
 
 class EmbeddingCreateMulti(BaseModel):

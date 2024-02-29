@@ -15,8 +15,29 @@ from embeddings.app.document.models import DocumentRead, DocumentPagination
 
 from .models import NamespaceRead
 from .models import NamespaceCreate
+from .models import NamespaceBaseModel
 from .models import NamespaceDelete
-from ..models import NamespaceQuery
+from ..models import NamespaceQuery, NamespacePagination
+
+
+async def namespaces() -> NamespacePagination:
+    client = AsyncQdrantClient(host=settings.QDRANT_HOST)
+    try:
+        result = await client.get_collections()
+    except UnexpectedResponse as ex:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=[{"msg": ex.content.decode('utf-8')}]
+        )
+
+    return NamespacePagination(
+        items=[NamespaceBaseModel(
+            name=o.name
+        ) for o in result.collections],
+        page=1,
+        total=len(result.collections),
+        itemsPerPage=len(result.collections)
+    )
 
 
 async def namespace(name: str) -> NamespaceRead:
@@ -85,7 +106,7 @@ async def delete(name: str) -> NamespaceDelete:
     )
 
 
-async def embedding_matches(namespace: str, data_in: NamespaceQuery, common: CommonParams):
+async def query(namespace: str, data_in: NamespaceQuery, common: CommonParams):
     client = API(
         api_token=settings.CLOUDFLARE_API_TOKEN,
         account_id=settings.CLOUDFLARE_API_ACCOUNT_ID
@@ -105,8 +126,12 @@ async def embedding_matches(namespace: str, data_in: NamespaceQuery, common: Com
         limit=common.get("limit")
     )
     data = {
-        "items": [DocumentRead(id=o.id, payload=o.payload, score=o.score, vector=o.vector) for o in
-                  query_search_result],
+        "items": [DocumentRead(
+            id=o.id,
+            payload=o.payload,
+            score=o.score,
+            vector=o.vector
+        ) for o in query_search_result],
         "total": len(query_search_result),
         "page": common.get("page"),
     }

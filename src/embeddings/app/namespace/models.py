@@ -1,11 +1,12 @@
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 
 from pydantic import BaseModel
 from pydantic import Field
 
 from qdrant_client.http.models import Distance
-
 from qdrant_client.http.models import CollectionStatus
+
+from embeddings.models import Pagination
 
 
 class NamespaceBaseModel(BaseModel):
@@ -33,3 +34,7 @@ class NamespaceQuery(BaseModel):
     return_metadata: Optional[bool] = False
     limit: Optional[int] = Field(default=5, gt=0)
     filter: Optional[Dict[str, Any]] = Field(default=None)
+
+
+class NamespacePagination(Pagination):
+    items: List[NamespaceBaseModel]

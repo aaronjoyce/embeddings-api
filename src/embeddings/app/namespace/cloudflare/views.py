@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Response, Request, Depends
+from fastapi import APIRouter, Depends
 
 from .models import (
     NamespaceCreate,
@@ -15,9 +15,8 @@ from embeddings.app.deps.request_params import CommonParams
 from embeddings.app.lib.cloudflare.api import API
 
 from .service import (
-    create_vector_index,
+    create,
     embedding_matches,
-    vectors_by_ids,
     paginated_query_results,
     vector_index_by_name,
     delete_vector_index_by_name
@@ -33,16 +32,14 @@ client = API(
 
 
 @router.post("", response_model=NamespaceRead)
-async def create(data_in: NamespaceCreate, ):
-    return create_vector_index(client=client, data_in=data_in)
+async def create_namespace(data_in: NamespaceCreate, ):
+    return create(client=client, data_in=data_in)
 
 
 @router.post("/{namespace}/query", response_model=DocumentPagination)
-async def query(namespace: str, data_in: NamespaceQuery, common: CommonParams, ):
+async def query_namespace(namespace: str, data_in: NamespaceQuery, common: CommonParams, ):
     matches = embedding_matches(client=client, namespace=namespace, data_in=data_in)
-    results = vectors_by_ids(client=client, namespace=namespace, ids=[o.get("id") for o in matches])
     return paginated_query_results(
-        results=results,
         matches=matches,
         common=common
     )
@@ -53,10 +50,10 @@ async def query(namespace: str, data_in: NamespaceQuery, common: CommonParams, )
     response_model=NamespaceRead,
     dependencies=[Depends(PermissionDependency([DefaultPermission]))]
 )
-async def get(namespace: str):
+async def get_namespace(namespace: str):
     return vector_index_by_name(client=client, namespace=namespace)
 
 
 @router.delete("/{namespace}", response_model=NamespaceDelete)
-async def delete(namespace: str, ):
+async def delete_namespace(namespace: str, ):
     return delete_vector_index_by_name(client=client, namespace=namespace)

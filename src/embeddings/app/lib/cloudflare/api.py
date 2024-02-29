@@ -293,3 +293,21 @@ class API:
             }
         )
         return res
+
+    @retry(tries=5, delay=1, backoff=1, jitter=0.5)
+    def list_database_table_records(
+            self,
+            database_id: str,
+            table_name: str,
+            limit: int = 20,
+            offset: int = 0
+    ):
+        sql = f"SELECT source, vector_id FROM {table_name} LIMIT {limit} OFFSET {offset};"
+        res = self.client.accounts.d1.database.query.post(
+            self.account_id,
+            database_id,
+            data={
+                "sql": sql
+            }
+        )
+        return res
