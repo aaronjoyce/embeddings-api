@@ -1,6 +1,6 @@
 import CloudFlare
 
-from typing import List
+from typing import List, Dict, Any
 
 from fastapi import HTTPException, status
 
@@ -16,7 +16,7 @@ from embeddings.app.embeddings.utils import merge_metadata, source_key
 from embeddings.app.config import settings
 
 
-def delete(client: API, namespace: str, embedding_ids: List[str]) -> List[str]:
+def delete(client: API, namespace: str, embedding_ids: List[str]) -> Dict[str, Any]:
     return client.delete_vectors_by_ids(
         vector_index_name=namespace,
         ids=embedding_ids

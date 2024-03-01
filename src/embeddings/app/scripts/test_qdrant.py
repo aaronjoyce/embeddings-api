@@ -38,9 +38,10 @@ def create_namespace(namespace: str, dimensionality: int = 1024, distance: str =
     print(("response_data", response_data))
     return response_data
 
+
 def get_embedding(namespace: str, embedding_id: str):
     res = requests.get(
-        url=url(path=f"/embeddings/cloudflare/{namespace}", path_id=embedding_id),
+        url=url(path=f"/embeddings/qdrant/{namespace}", path_id=embedding_id),
         headers=headers()
     )
     print(("get_embedding.res", res))
@@ -49,7 +50,7 @@ def get_embedding(namespace: str, embedding_id: str):
 
 def delete_embedding(namespace: str, embedding_id: str):
     res = requests.delete(
-        url=url(path=f"/embeddings/cloudflare/{namespace}", path_id=embedding_id),
+        url=url(path=f"/embeddings/qdrant/{namespace}", path_id=embedding_id),
         headers=headers()
     )
     return res.json()
@@ -70,7 +71,7 @@ def create_embedding(namespace: str, text: str):
     }
     print(("json_data", json_data))
     res = requests.post(
-        url=url(path="/embeddings/cloudflare", path_id=namespace),
+        url=url(path="/embeddings/qdrant", path_id=namespace),
         json=json_data,
         headers=headers()
     )
@@ -78,7 +79,7 @@ def create_embedding(namespace: str, text: str):
 
 
 def get_namespace(name: str):
-    uri = url(path="/namespace/cloudflare", path_id=name)
+    uri = url(path="/namespace/qdrant", path_id=name)
     res = requests.get(
         url=uri,
         headers=headers()
@@ -87,7 +88,7 @@ def get_namespace(name: str):
 
 
 def delete_namespace(name: str):
-    uri = url(path="/namespace/cloudflare", path_id=name)
+    uri = url(path="/namespace/qdrant", path_id=name)
     res = requests.delete(
         url=uri,
         headers=headers()
@@ -96,7 +97,7 @@ def delete_namespace(name: str):
 
 
 def query(namespace: str, inputs: str):
-    uri = url(path=f"/namespace/cloudflare/{namespace}/query")
+    uri = url(path=f"/namespace/qdrant/{namespace}/query")
     res = requests.post(
         url=uri,
         json={
@@ -111,18 +112,18 @@ def query(namespace: str, inputs: str):
 
 def run():
     create_namespace(
-        namespace="test109",
+        namespace="test209",
     )
-    insertion_text = ["sample text"]
-    res = create_embedding(namespace=NAMESPACE_NAME, text=insertion_text[0])
-    print(("cloudflare.embedding.create", res))
     exit()
-
-    res = query(namespace=NAMESPACE_NAME, inputs="abc")
-    print(("cloudflare.query.res", res, res.json()))
-
-    exit()
-
+    # insertion_text = ["sample text"]
+    # res = create_embedding(namespace=NAMESPACE_NAME, text=insertion_text[0])
+    # print(("cloudflare.embedding.create", res))
+    # exit()
+    #
+    # res = query(namespace=NAMESPACE_NAME, inputs="abc")
+    # print(("cloudflare.query.res", res, res.json()))
+    #
+    # exit()
     res = delete_embedding(
         namespace=NAMESPACE_NAME,
         embedding_id="1e24a2fa-e228-4699-a283-fd85142692a6"

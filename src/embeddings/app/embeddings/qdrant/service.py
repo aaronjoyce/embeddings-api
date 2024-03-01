@@ -77,9 +77,9 @@ async def collection_exists(client: AsyncQdrantClient, namespace: str) -> bool:
 
 
 async def insert(
-        client: AsyncQdrantClient,
-        namespace: str,
-        data_in: EmbeddingCreateMulti,
+    client: AsyncQdrantClient,
+    namespace: str,
+    data_in: EmbeddingCreateMulti,
 ) -> InsertionResult:
     texts = [o.text for o in data_in.inputs]
     result = cloudflare.embed(
@@ -148,6 +148,8 @@ async def delete(client: AsyncQdrantClient, namespace: str, embedding_ids: List[
             points=embedding_ids
         )
     )
+    success = response.status == UpdateStatus.COMPLETED
     return EmbeddingDelete(
-        success=True
+        success=success,
+        count=None
     )

@@ -78,7 +78,8 @@ async def delete_embedding(namespace: str, embedding_id: str, ):
         embedding_ids=[embedding_id]
     )
     return EmbeddingDelete(
-        success=True
+        success=True,
+        count=result.get('count')
     )
 
 

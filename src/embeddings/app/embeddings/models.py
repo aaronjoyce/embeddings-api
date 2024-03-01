@@ -12,6 +12,7 @@ from embeddings.app.lib.cloudflare.api import CloudflareEmbeddingModels
 
 class EmbeddingDelete(BaseModel):
     success: bool
+    count: Optional[int] = None
 
 
 class EmbeddingRead(BaseModel):

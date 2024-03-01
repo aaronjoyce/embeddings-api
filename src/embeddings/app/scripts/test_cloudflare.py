@@ -31,7 +31,6 @@ def create_namespace(namespace: str):
     response_data = response.json()
     print(("response_data", response_data))
 
-
 def get_embedding(namespace: str, embedding_id: str):
     res = requests.get(
         url=url(path=f"/embeddings/cloudflare/{namespace}", path_id=embedding_id),
@@ -54,7 +53,6 @@ def list_embeddings(namespace: str):
         url=url(path=f"/embeddings/cloudflare/{namespace}"),
         headers=headers()
     )
-    print(("res", res))
     return res.json()
 
 
@@ -71,7 +69,6 @@ def create_embedding(namespace: str, text: str):
         "create_namespace": True,
         # "embedding_model": "@cf/baai/bge-base-en-v1.5",  # "@cf/baai/bge-small-en-v1.5"
     }
-    print(("json_data", json_data))
     res = requests.post(
         url=url(path="/embeddings/cloudflare", path_id=namespace),
         json=json_data,
@@ -122,6 +119,11 @@ def query(namespace: str, inputs: str):
 
 
 def run():
+    res = delete_embedding(
+        namespace=NAMESPACE_NAME,
+        embedding_id="1e24a2fa-e228-4699-a283-fd85142692a6"
+    )
+    exit()
     res = list_namespaces()
     print(("list_namespaces.res", res))
     exit()
