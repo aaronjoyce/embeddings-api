@@ -22,3 +22,8 @@ api_router.include_router(
 api_router.include_router(
     cloudflare_namespace_router
 )
+
+
+@api_router.get("/healthcheck", include_in_schema=False)
+def healthcheck():
+    return {"status": "ok"}
