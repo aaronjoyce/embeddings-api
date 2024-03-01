@@ -12,7 +12,8 @@ from .service import (
     collection_exists,
     embeddings,
     delete,
-    embedding
+    embedding,
+    create
 )
 
 from embeddings.models import InsertionResult
@@ -46,28 +47,7 @@ async def get_embeddings(namespace: str, common: CommonParams, ):
 @router.post("/{namespace}", response_model=InsertionResult[EmbeddingRead])
 async def create_embedding(namespace: str, data_in: EmbeddingCreateMulti, ):
     client = AsyncQdrantClient(host=settings.QDRANT_HOST, port=settings.QDRANT_HTTP_PORT)
-    exists = await collection_exists(client, namespace)
-    if not exists and not data_in.create_namespace:
-        raise HTTPException(
-            status_code=404,
-            detail=[{"msg": f"Collection with name {namespace} does not exist"}]
-        )
-    elif not exists:
-        vector_size = data_in.embedding_model.dimensionality
-        await client.create_collection(
-            collection_name=namespace,
-            vectors_config=VectorParams(
-                size=vector_size,
-                distance=Distance.COSINE
-            ),
-        )
-
-    res = await insert(
-        client=client,
-        data_in=data_in,
-        namespace=namespace,
-    )
-    return res
+    return await create(client=client, namespace=namespace, data_in=data_in)
 
 
 @router.delete("/{namespace}/{embedding_id}", response_model=EmbeddingDelete)

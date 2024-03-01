@@ -8,6 +8,7 @@ from qdrant_client.http.exceptions import UnexpectedResponse
 from qdrant_client.conversions import common_types
 from qdrant_client.http.models import UpdateStatus
 from qdrant_client.models import PointIdsList
+from qdrant_client.http.models import Distance, VectorParams
 
 from ..models import EmbeddingRead, EmbeddingPagination, EmbeddingCreateMulti, EmbeddingDelete
 
@@ -74,6 +75,31 @@ async def collection_exists(client: AsyncQdrantClient, namespace: str) -> bool:
     except UnexpectedResponse as ex:
         return False
     return True
+
+
+async def create(client: AsyncQdrantClient, namespace: str, data_in: EmbeddingCreateMulti) -> InsertionResult:
+    exists = await collection_exists(client, namespace)
+    if not exists and not data_in.create_namespace:
+        raise HTTPException(
+            status_code=404,
+            detail=[{"msg": f"Collection with name {namespace} does not exist"}]
+        )
+
+    if not exists:
+        vector_size = data_in.embedding_model.dimensionality
+        await client.create_collection(
+            collection_name=namespace,
+            vectors_config=VectorParams(
+                size=vector_size,
+                distance=Distance.COSINE
+            ),
+        )
+
+    return await insert(
+        client=client,
+        data_in=data_in,
+        namespace=namespace,
+    )
 
 
 async def insert(
