@@ -6,7 +6,7 @@ from .models import (
     NamespaceDelete,
 )
 
-from ..models import NamespaceQuery
+from ..models import NamespaceQuery, NamespacePagination
 
 from embeddings.app.permissions.auth import PermissionDependency, DefaultPermission
 from embeddings.app.document.models import DocumentPagination
@@ -19,7 +19,8 @@ from .service import (
     embedding_matches,
     paginated_query_results,
     vector_index_by_name,
-    delete_vector_index_by_name
+    delete_vector_index_by_name,
+    vector_indexes
 )
 
 
@@ -34,6 +35,11 @@ client = API(
 @router.post("", response_model=NamespaceRead)
 async def create_namespace(data_in: NamespaceCreate, ):
     return create(client=client, data_in=data_in)
+
+
+@router.get("", response_model=NamespacePagination)
+async def get_namespaces():
+    return vector_indexes(client=client)
 
 
 @router.post("/{namespace}/query", response_model=DocumentPagination)

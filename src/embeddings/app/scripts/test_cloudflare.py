@@ -57,6 +57,7 @@ def list_embeddings(namespace: str):
     print(("res", res))
     return res.json()
 
+
 def create_embedding(namespace: str, text: str):
     json_data = {
         "inputs": [{
@@ -88,6 +89,15 @@ def get_namespace(name: str):
     return res.json()
 
 
+def list_namespaces():
+    uri = url(path="/namespace/cloudflare")
+    res = requests.get(
+        url=uri,
+        headers=headers()
+    )
+    return res.json()
+
+
 def delete_namespace(name: str):
     uri = url(path="/namespace/cloudflare", path_id=name)
     res = requests.delete(
@@ -112,6 +122,9 @@ def query(namespace: str, inputs: str):
 
 
 def run():
+    res = list_namespaces()
+    print(("list_namespaces.res", res))
+    exit()
     list_embeddings(NAMESPACE_NAME)
     exit()
     insertion_text = ["sample text"]

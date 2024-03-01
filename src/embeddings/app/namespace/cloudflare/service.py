@@ -8,7 +8,7 @@ from fastapi import status
 from embeddings.app.lib.cloudflare.api import API
 
 from .models import NamespaceCreate, NamespaceRead, NamespaceDelete
-from ..models import NamespaceQuery
+from ..models import NamespaceQuery, NamespacePagination, NamespaceBaseModel
 
 from embeddings.app.embeddings.utils import source_key
 
@@ -92,6 +92,23 @@ def paginated_query_results(matches: List, common: CommonParams) -> DocumentPagi
         "itemsPerPage": common.get("limit")
     }
     return DocumentPagination(**data)
+
+
+def vector_indexes(client: API) -> NamespacePagination:
+    try:
+        res = client.list_vector_indexes()
+        return NamespacePagination(
+            items=[
+                NamespaceBaseModel(
+                    name=o.get('name')
+                ) for o in res
+            ],
+            total=len(res),
+            page=1,
+            itemsPerPage=len(res)
+        )
+    except CloudFlare.exceptions.CloudFlareAPIError as ex:
+        pass
 
 
 def vector_index_by_name(client: API, namespace: str, ) -> NamespaceRead:

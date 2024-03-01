@@ -42,15 +42,12 @@ async def get_embeddings(namespace: str, common: CommonParams):
         offset=offset
     )
     d1_results = {o.get('vector_id'): o for o in response[0].get('results', [])}
-    print(("d1_results", d1_results))
 
     response = client.vectors_by_ids(
         vector_index_name=namespace,
         ids=list(d1_results.keys())
     )
-    print(("vectorize.response", response))
     vectorize_results = {o.get('id'): o for o in response}
-    print(("vectorize_results", vectorize_results))
     return EmbeddingPagination(
         items=[EmbeddingRead(
             id=vector_id,

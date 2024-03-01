@@ -338,7 +338,7 @@ class TestCloudflareNamespace(TestBase):
         assert response.json().get("dimensionality") == dimensionality
         self.namespaces.append(namespace_name)
 
-    def test_delete_cloudflare_namespace(self):
+    def test_delete_namespace(self):
         namespace_name = generate_namespace_name()
 
         response = client.post(
@@ -358,6 +358,25 @@ class TestCloudflareNamespace(TestBase):
         )
         assert response.status_code == status.HTTP_200_OK
         assert response.json().get("success")
+        self.namespaces.append(namespace_name)
+
+    def test_list(self):
+        namespace_name = generate_namespace_name()
+
+        response = client.post(
+            url=CLOUDFLARE_NAMESPACE_PATH,
+            json={
+                "preset": str(CloudflareEmbeddingModels.BAAISmall),
+                "name": namespace_name
+            }
+        )
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json().get("name") == namespace_name
+
+        response = client.get(
+            url=CLOUDFLARE_NAMESPACE_PATH,
+        )
+        assert any([o.get('name') == namespace_name for o in response.json().get('items', [])])
         self.namespaces.append(namespace_name)
 
 
