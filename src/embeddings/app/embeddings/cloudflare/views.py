@@ -26,9 +26,6 @@ client = API(
 
 @router.get("/{namespace}", response_model=EmbeddingPagination)
 async def get_embeddings(namespace: str, common: CommonParams):
-    limit = common.get("limit")
-    offset = common.get("offset")
-
     if settings.CLOUDFLARE_D1_DATABASE_IDENTIFIER is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -38,8 +35,8 @@ async def get_embeddings(namespace: str, common: CommonParams):
     response = client.list_database_table_records(
         database_id=settings.CLOUDFLARE_D1_DATABASE_IDENTIFIER,
         table_name=namespace,
-        limit=limit,
-        offset=offset
+        limit=common.get("limit"),
+        offset=common.get("offset")
     )
     d1_results = {o.get('vector_id'): o for o in response[0].get('results', [])}
 
