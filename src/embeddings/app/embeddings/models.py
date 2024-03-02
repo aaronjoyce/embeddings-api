@@ -28,8 +28,11 @@ class EmbeddingPagination(Pagination):
 
 
 class EmbeddingsCreateSingle(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    text: str = Field(max)
+    id: str = Field(
+        default_factory=lambda: str(uuid.uuid4()),
+        description="Defaults to a randomly generated UUID"
+    )
+    text: str
     payload: Optional[Dict[str, Any]] = Field(default_factory=dict)
     persist_original: Optional[bool] = Field(default=False)
 

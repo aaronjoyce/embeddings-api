@@ -23,6 +23,10 @@ router = APIRouter(prefix="/embeddings/cloudflare")
 
 @router.get("/{namespace}", response_model=EmbeddingPagination)
 async def get_embeddings(namespace: str, common: CommonParams, client: CloudflareClient):
+    """
+    Page through embeddings.
+    Only supported if a valid `CLOUDFLARE_D1_DATABASE_IDENTIFIER` environment variable has been set.
+    """
     if settings.CLOUDFLARE_D1_DATABASE_IDENTIFIER is None:
         raise EnvironmentVariableConfigException(
             "Support for listing embeddings is unavailable without integrating Cloudflare D1."
@@ -55,6 +59,7 @@ async def get_embeddings(namespace: str, common: CommonParams, client: Cloudflar
 
 @router.get("/{namespace}/{embedding_id}", response_model=EmbeddingRead)
 async def get_embedding(namespace: str, embedding_id: str, client: CloudflareClient):
+    """Retrieve a single embedding vector"""
     return get(
         client=client,
         namespace=namespace,
@@ -64,7 +69,7 @@ async def get_embedding(namespace: str, embedding_id: str, client: CloudflareCli
 
 @router.delete("/{namespace}/{embedding_id}", response_model=EmbeddingDelete)
 async def delete_embedding(namespace: str, embedding_id: str, client: CloudflareClient):
-    # TODO: Check the value of the returned result object
+    """Delete an existing embedding by namespace and `id`"""
     result = delete(
         client=client,
         namespace=namespace,
@@ -78,6 +83,15 @@ async def delete_embedding(namespace: str, embedding_id: str, client: Cloudflare
 
 @router.post("/{namespace}", response_model=InsertionResult[EmbeddingRead], status_code=status.HTTP_201_CREATED)
 async def create_embedding(namespace: str, data_in: EmbeddingCreateMulti, client: CloudflareClient):
+    """
+    Generate and persist embeddings for one or more text items.
+    If a valid `CLOUDFLARE_D1_DATABASE_IDENTIFIER` environment variable has been set,
+    the embedding identifier, along with the original embedded text, will be persisted
+    to the Cloudflare D1 service.
+    Persisting to Cloudflare D1 enables API support for paging through embeddings, i.e.,
+    `/embeddings/cloudflare/{namespace}`. This is because the Cloudflare the Vectorize
+    service does not natively support paging/scrolling through vectors at this time.
+    """
     result = client.embed(
         model=data_in.embedding_model.value,
         texts=[o.text for o in data_in.inputs]
