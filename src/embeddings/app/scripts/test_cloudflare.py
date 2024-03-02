@@ -129,10 +129,10 @@ def run():
     # exit()
     # list_embeddings(NAMESPACE_NAME)
     # exit()
-    # insertion_text = ["sample text"]
-    # res = create_embedding(namespace=NAMESPACE_NAME, text=insertion_text[0])
-    # print(("cloudflare.embedding.create", res))
-    # exit()
+    insertion_text = ["sample text"]
+    res = create_embedding(namespace=NAMESPACE_NAME, text=insertion_text[0])
+    print(("cloudflare.embedding.create", res))
+    exit()
     #
     # res = query(namespace=NAMESPACE_NAME, inputs="abc")
     # print(("cloudflare.query.res", res, res.json()))

@@ -22,10 +22,13 @@ ERROR_CODE_VECTOR_INDEX_NOT_FOUND = 3000
 ERROR_CODE_INSERT_VECTOR_INDEX_SIZE_MISMATCH = 4003
 
 
-# dimensions
-SMALL_DIMENSION = 384
-BASE_DIMENSION = 768
-LARGE_DIMENSION = 1024
+# input dimensions
+MAX_EMBEDDING_INPUT_TOKENS = 512
+
+# output dimensions
+OUTPUT_SMALL_DIMENSION = 384
+OUTPUT_BASE_DIMENSION = 768
+OUTPUT_LARGE_DIMENSION = 1024
 
 
 MODEL_NAME_BGE_SMALL = "@cf/baai/bge-small-en-v1.5"
@@ -33,10 +36,10 @@ MODEL_NAME_BGE_BASE = "@cf/baai/bge-base-en-v1.5"
 MODEL_NAME_BGE_LARGE = "@cf/baai/bge-large-en-v1.5"
 
 
-MODEL_DIMENSIONS = {
-    MODEL_NAME_BGE_SMALL: SMALL_DIMENSION,
-    MODEL_NAME_BGE_BASE: BASE_DIMENSION,
-    MODEL_NAME_BGE_LARGE: LARGE_DIMENSION
+MODEL_OUTPUT_DIMENSIONS = {
+    MODEL_NAME_BGE_SMALL: OUTPUT_SMALL_DIMENSION,
+    MODEL_NAME_BGE_BASE: OUTPUT_BASE_DIMENSION,
+    MODEL_NAME_BGE_LARGE: OUTPUT_LARGE_DIMENSION
 }
 
 
@@ -50,13 +53,13 @@ class CloudflareEmbeddingModels(enum.Enum):
 
     @property
     def dimensionality(self) -> int:
-        return MODEL_DIMENSIONS.get(self.value)
+        return MODEL_OUTPUT_DIMENSIONS.get(self.value)
 
 
 DIMENSIONALITY_PRESETS = {
-    SMALL_DIMENSION: [CloudflareEmbeddingModels.BAAISmall],
-    BASE_DIMENSION: [CloudflareEmbeddingModels.BAAIBase],
-    LARGE_DIMENSION: [CloudflareEmbeddingModels.BAAILarge]
+    OUTPUT_SMALL_DIMENSION: [CloudflareEmbeddingModels.BAAISmall],
+    OUTPUT_BASE_DIMENSION: [CloudflareEmbeddingModels.BAAIBase],
+    OUTPUT_LARGE_DIMENSION: [CloudflareEmbeddingModels.BAAILarge]
 }
 
 
