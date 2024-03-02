@@ -1,8 +1,8 @@
-from embeddings.app.lib.cloudflare.api import API
-from embeddings.app.lib.cloudflare.models import VectorPayloadItem
-from embeddings.app.lib.cloudflare.models import CreateDatabaseRecord
+from app.lib.cloudflare.api import API
+from app.lib.cloudflare.models import VectorPayloadItem
+from app.lib.cloudflare.models import CreateDatabaseRecord
 
-from embeddings.app.config import settings
+from app.config import settings
 
 
 api = API(
