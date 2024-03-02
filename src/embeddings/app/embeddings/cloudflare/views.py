@@ -59,7 +59,7 @@ async def get_embeddings(namespace: str, common: CommonParams, client: Cloudflar
 
 @router.get("/{namespace}/{embedding_id}", response_model=EmbeddingRead)
 async def get_embedding(namespace: str, embedding_id: str, client: CloudflareClient):
-    """Retrieve a single embedding vector"""
+    """Retrieve a single embedding vector by namespace and embedding `ID`"""
     return get(
         client=client,
         namespace=namespace,
@@ -69,7 +69,7 @@ async def get_embedding(namespace: str, embedding_id: str, client: CloudflareCli
 
 @router.delete("/{namespace}/{embedding_id}", response_model=EmbeddingDelete)
 async def delete_embedding(namespace: str, embedding_id: str, client: CloudflareClient):
-    """Delete an existing embedding by namespace and `id`"""
+    """Delete an existing embedding by namespace and `ID`"""
     result = delete(
         client=client,
         namespace=namespace,

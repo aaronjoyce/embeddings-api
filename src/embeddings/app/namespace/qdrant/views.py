@@ -30,6 +30,7 @@ async def create_namespace(data_in: NamespaceCreate, client: QdrantClient):
 
 @router.post("/{namespace}/query", response_model=DocumentPagination)
 async def query_namespace(namespace: str, data_in: NamespaceQuery, common: CommonParams, ):
+    """Run a vector query against a named collection."""
     return await query(
         namespace=namespace,
         data_in=data_in,
@@ -39,14 +40,17 @@ async def query_namespace(namespace: str, data_in: NamespaceQuery, common: Commo
 
 @router.get("/{namespace}", response_model=NamespaceRead, dependencies=[Depends(PermissionDependency([]))])
 async def get_namespace(namespace: str, client: QdrantClient):
+    """Retrieve a collection by name"""
     return await get(name=namespace, client=client)
 
 
 @router.get("", response_model=NamespacePagination)
 async def get_namespaces(client: QdrantClient):
+    """Retrieve all collections"""
     return await get_all(client=client)
 
 
 @router.delete("/{namespace}", response_model=NamespaceDelete)
 async def delete_namespace(namespace: str, client: QdrantClient):
+    """Delete a collection by name."""
     return await delete(namespace, client=client)

@@ -20,7 +20,7 @@ router = APIRouter(prefix="/embeddings/qdrant")
 
 @router.get("/{namespace}/{embedding_id}", response_model=EmbeddingRead)
 async def get_embedding(namespace: str, embedding_id: str, client: QdrantClient):
-    """Retrieve a single embedding vector"""
+    """Retrieve a single embedding vector by namespace and `ID`"""
     return await embedding(
         client=client,
         namespace=namespace,
