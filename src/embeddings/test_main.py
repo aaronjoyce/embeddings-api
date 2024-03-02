@@ -189,7 +189,7 @@ class TestCloudflareEmbedding(TestBase):
             name=namespace_name,
             preset=embedding_model
         )
-        assert response.status_code == status.HTTP_200_OK
+        assert response.status_code == status.HTTP_201_CREATED
 
         response = create_cloudflare_embedding(
             namespace=namespace_name,
@@ -198,7 +198,7 @@ class TestCloudflareEmbedding(TestBase):
             create_namespace=False,
             embedding_model=embedding_model
         )
-        assert response.status_code == status.HTTP_200_OK
+        assert response.status_code == status.HTTP_201_CREATED
         self.namespaces.append(namespace_name)
 
     def test_create_non_existing_namespace_auto_create(self):
@@ -211,7 +211,7 @@ class TestCloudflareEmbedding(TestBase):
             create_namespace=True,
             embedding_model=embedding_model
         )
-        assert response.status_code == status.HTTP_200_OK
+        assert response.status_code == status.HTTP_201_CREATED
         self.namespaces.append(namespace_name)
 
     def test_create_non_existing_namespace_no_create(self):
@@ -227,7 +227,7 @@ class TestCloudflareEmbedding(TestBase):
         )
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
-        response_error_message = response.json().get("detail")[0].get("msg")
+        response_error_message = response.json().get("msg")
         assert bool(re.match(r"vector index with name", response_error_message.lower()))
 
     def test_create_payload(self):
@@ -244,7 +244,7 @@ class TestCloudflareEmbedding(TestBase):
             create_namespace=True,
             payload=embedding_payload
         )
-        assert response.status_code == status.HTTP_200_OK
+        assert response.status_code == status.HTTP_201_CREATED
 
         create_response_json = response.json()
         created_embedding_item = create_response_json.get("items", [])[0]
@@ -266,7 +266,7 @@ class TestCloudflareEmbedding(TestBase):
             persist_original=True,
             create_namespace=True,
         )
-        assert response.status_code == status.HTTP_200_OK
+        assert response.status_code == status.HTTP_201_CREATED
 
         create_response_json = response.json()
         created_embedding_json = create_response_json.get("items", [])[0]
@@ -288,7 +288,7 @@ class TestCloudflareEmbedding(TestBase):
             persist_original=True,
             create_namespace=True,
         )
-        assert response.status_code == status.HTTP_200_OK
+        assert response.status_code == status.HTTP_201_CREATED
 
         create_response_json = response.json()
         created_embedding_item = create_response_json.get("items", [])[0]
@@ -311,7 +311,7 @@ class TestCloudflareNamespace(TestBase):
             name=namespace_name,
             preset=str(CloudflareEmbeddingModels.BAAISmall)
         )
-        assert response.status_code == status.HTTP_200_OK
+        assert response.status_code == status.HTTP_201_CREATED
         assert response.json().get("name") == namespace_name
         assert response.json().get("dimensionality") == CloudflareEmbeddingModels.BAAISmall.dimensionality
 
@@ -348,7 +348,7 @@ class TestCloudflareNamespace(TestBase):
                 "name": namespace_name
             }
         )
-        assert response.status_code == status.HTTP_200_OK
+        assert response.status_code == status.HTTP_201_CREATED
         assert response.json().get("name") == namespace_name
 
         response = client.delete(
@@ -370,7 +370,7 @@ class TestCloudflareNamespace(TestBase):
                 "name": namespace_name
             }
         )
-        assert response.status_code == status.HTTP_200_OK
+        assert response.status_code == status.HTTP_201_CREATED
         assert response.json().get("name") == namespace_name
 
         response = client.get(
@@ -470,7 +470,7 @@ class TestQdrantNamespace(TestQdrantBase):
         response = create_qdrant_namespace(
             name=namespace_name,
         )
-        assert response.status_code == status.HTTP_200_OK
+        assert response.status_code == status.HTTP_201_CREATED
         assert response.json().get("name") == namespace_name
         self.namespaces.append(namespace_name)
 
@@ -481,7 +481,7 @@ class TestQdrantNamespace(TestQdrantBase):
             name=namespace_name,
             dimensionality=dimensionality
         )
-        assert response.status_code == status.HTTP_200_OK
+        assert response.status_code == status.HTTP_201_CREATED
         assert response.json().get("dimensionality") == dimensionality
 
         self.namespaces.append(namespace_name)
@@ -493,7 +493,7 @@ class TestQdrantNamespace(TestQdrantBase):
             name=namespace_name,
             distance=distance
         )
-        assert response.status_code == status.HTTP_200_OK
+        assert response.status_code == status.HTTP_201_CREATED
         assert response.json().get("distance") == distance
 
         self.namespaces.append(namespace_name)
@@ -519,7 +519,7 @@ class TestQdrantNamespace(TestQdrantBase):
                 "name": namespace_name
             }
         )
-        assert response.status_code == status.HTTP_200_OK
+        assert response.status_code == status.HTTP_201_CREATED
 
         response = client.get(
             url=QDRANT_NAMESPACE_PATH,
@@ -536,7 +536,7 @@ class TestQdrantEmbedding(TestQdrantBase):
         response = create_qdrant_namespace(
             name=namespace_name
         )
-        assert response.status_code == status.HTTP_200_OK
+        assert response.status_code == status.HTTP_201_CREATED
 
         response = create_qdrant_embedding(
             namespace=namespace_name,
@@ -544,7 +544,7 @@ class TestQdrantEmbedding(TestQdrantBase):
             persist_original=True,
             create_namespace=False,
         )
-        assert response.status_code == status.HTTP_200_OK
+        assert response.status_code == status.HTTP_201_CREATED
         self.namespaces.append(namespace_name)
 
     def test_create_non_existing_namespace_auto_create(self):
@@ -555,7 +555,7 @@ class TestQdrantEmbedding(TestQdrantBase):
             persist_original=True,
             create_namespace=True,
         )
-        assert response.status_code == status.HTTP_200_OK
+        assert response.status_code == status.HTTP_201_CREATED
         self.namespaces.append(namespace_name)
 
     def test_create_non_existing_namespace_no_create(self):
@@ -568,7 +568,7 @@ class TestQdrantEmbedding(TestQdrantBase):
         )
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
-        response_error_message = response.json().get("detail")[0].get("msg")
+        response_error_message = response.json().get("msg")
         assert bool(re.match(r"collection with name", response_error_message.lower()))
 
     def test_create_payload(self):
@@ -585,7 +585,7 @@ class TestQdrantEmbedding(TestQdrantBase):
             create_namespace=True,
             payload=embedding_payload
         )
-        assert response.status_code == status.HTTP_200_OK
+        assert response.status_code == status.HTTP_201_CREATED
         created_embedding_item = response.json().get("items", [])[0]
 
         response = client.get(
@@ -597,27 +597,25 @@ class TestQdrantEmbedding(TestQdrantBase):
         assert response.json().get("payload") == embedding_payload
         self.namespaces.append(namespace_name)
 
-    # def test_create_source(self):
-    #     namespace_name = generate_namespace_name()
-    #     response = create_qdrant_embedding(
-    #         namespace=namespace_name,
-    #         text=EMBEDDING_TEXT,
-    #         persist_original=True,
-    #         create_namespace=True,
-    #     )
-    #     assert response.status_code == status.HTTP_200_OK
-    #
-    #     create_response_json = response.json()
-    #     created_embedding_json = create_response_json.get("items", [])[0]
-    #
-    #     response = client.get(
-    #         url=RETRIEVE_DELETE_QDRANT_EMBEDDING_PATH.format(
-    #             namespace=namespace_name,
-    #             embedding_id=created_embedding_json.get("id")
-    #         ),
-    #     )
-    #     assert response.json().get("source") == EMBEDDING_TEXT
-    #     self.namespaces.append(namespace_name)
+    def test_create_source(self):
+        namespace_name = generate_namespace_name()
+        response = create_qdrant_embedding(
+            namespace=namespace_name,
+            text=EMBEDDING_TEXT,
+            persist_original=True,
+            create_namespace=True,
+        )
+        assert response.status_code == status.HTTP_201_CREATED
+        created_embedding_json = response.json().get("items", [])[0]
+
+        response = client.get(
+            url=RETRIEVE_DELETE_QDRANT_EMBEDDING_PATH.format(
+                namespace=namespace_name,
+                embedding_id=created_embedding_json.get("id")
+            ),
+        )
+        assert response.json().get("source") == EMBEDDING_TEXT
+        self.namespaces.append(namespace_name)
 
     def test_delete(self):
         namespace_name = generate_namespace_name()
@@ -627,7 +625,7 @@ class TestQdrantEmbedding(TestQdrantBase):
             persist_original=True,
             create_namespace=True,
         )
-        assert response.status_code == status.HTTP_200_OK
+        assert response.status_code == status.HTTP_201_CREATED
         created_embedding_item = response.json().get("items", [])[0]
 
         response = client.delete(

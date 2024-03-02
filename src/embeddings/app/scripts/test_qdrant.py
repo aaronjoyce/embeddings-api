@@ -4,7 +4,7 @@ import requests
 
 from typing import List, Optional
 
-NAMESPACE_NAME = "test21"
+NAMESPACE_NAME = "test920"
 
 BASE_URI = "http://localhost:8000"
 API_PREFIX = "/api/v1"
@@ -37,7 +37,6 @@ def create_namespace(namespace: str, dimensionality: int = 1024, distance: str =
     response_data = response.json()
     print(("response_data", response_data))
     return response_data
-
 
 def get_embedding(namespace: str, embedding_id: str):
     res = requests.get(
@@ -112,13 +111,13 @@ def query(namespace: str, inputs: str):
 
 def run():
     create_namespace(
-        namespace="test209",
+        namespace=NAMESPACE_NAME,
     )
     exit()
-    # insertion_text = ["sample text"]
-    # res = create_embedding(namespace=NAMESPACE_NAME, text=insertion_text[0])
-    # print(("cloudflare.embedding.create", res))
-    # exit()
+    insertion_text = ["sample text"]
+    res = create_embedding(namespace=NAMESPACE_NAME, text=insertion_text[0])
+    print(("cloudflare.embedding.create", res))
+    exit()
     #
     # res = query(namespace=NAMESPACE_NAME, inputs="abc")
     # print(("cloudflare.query.res", res, res.json()))

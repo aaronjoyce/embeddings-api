@@ -17,4 +17,3 @@ def common_params(
 
 
 CommonParams = Annotated[dict[int], Depends(common_params)]
-

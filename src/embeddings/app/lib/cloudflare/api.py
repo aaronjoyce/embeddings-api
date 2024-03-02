@@ -5,12 +5,14 @@ import traceback
 
 import CloudFlare
 
-from fastapi import HTTPException, status
+from fastapi import status
 from typing import Optional, List, Dict, Any
 
 from retry import retry
 
 from embeddings.app.lib.cloudflare.models import CreateDatabaseRecord
+
+from embeddings.exceptions import EmbeddingDimensionalityException, NotFoundException
 
 from .models import VectorPayloadItem
 
@@ -192,35 +194,40 @@ class API:
                 expected_dimension = int(matches.group(1))
                 received_dimension = int(matches.group(2))
                 compatible_model_names = ','.join([str(o) for o in DIMENSIONALITY_PRESETS.get(expected_dimension, [])])
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=[{
-                        "msg": f"The embedding model's dimensionality: {received_dimension} is "
-                               f"not compatible with the dimensionality of the namespace '{vector_index_name}', "
-                               f"dimensionality: {expected_dimension}. "
-                               f"Please provide one of the following compatible models: {compatible_model_names}",
-                    }]
+                # raise a pydantic validation error?
+                raise EmbeddingDimensionalityException(
+                    f"The embedding model's dimensionality: {received_dimension} is "
+                    f"not compatible with the dimensionality of the namespace '{vector_index_name}', "
+                    f"dimensionality: {expected_dimension}. "
+                    f"Please provide one of the following compatible models: {compatible_model_names}",
                 )
 
-            elif exception_status_code == ERROR_CODE_VECTOR_INDEX_NOT_FOUND and create_on_not_found:
-                # infer dimensionality from the vector at index 0
-                default_dimensionality_presets = DIMENSIONALITY_PRESETS.get(len(vectors[0].values), [])
-                if not default_dimensionality_presets:
-                    allowed_dimensionality_values = ','.join([str(o) for o in DIMENSIONALITY_PRESETS.keys()])
-                    raise Exception(
-                        f"Unsupported vector preset dimensionality. "
-                        f"Expected one of: {','.join(allowed_dimensionality_values)}, got: {len(vectors[0].values)}"
+            elif exception_status_code == ERROR_CODE_VECTOR_INDEX_NOT_FOUND:
+                if create_on_not_found:
+                    # infer dimensionality from the vector at index 0
+                    default_dimensionality_presets = DIMENSIONALITY_PRESETS.get(len(vectors[0].values), [])
+                    if not default_dimensionality_presets:
+                        allowed_dimensionality_values = ','.join([str(o) for o in DIMENSIONALITY_PRESETS.keys()])
+                        raise Exception(
+                            f"Unsupported vector preset dimensionality. "
+                            f"Expected one of: {','.join(allowed_dimensionality_values)}, got: {len(vectors[0].values)}"
+                        )
+
+                    preset = str(model_name) if model_name is not None else default_dimensionality_presets[0].value
+                    self.create_vector_index(
+                        name=vector_index_name,
+                        preset=preset
                     )
-
-                preset = str(model_name) if model_name is not None else default_dimensionality_presets[0].value
-                self.create_vector_index(
-                    name=vector_index_name,
-                    preset=preset
-                )
-                return self.insert_vectors(
-                    vector_index_name=vector_index_name,
-                    vectors=vectors
-                )
+                    return self.insert_vectors(
+                        vector_index_name=vector_index_name,
+                        vectors=vectors
+                    )
+                else:
+                    raise NotFoundException(
+                        f"Vector index with name '{vector_index_name}' not found. "
+                        f"Create the index via a separate call or include 'create_namespace' "
+                        f"in your payload to automagically create and insert."
+                    )
 
             raise ex
 

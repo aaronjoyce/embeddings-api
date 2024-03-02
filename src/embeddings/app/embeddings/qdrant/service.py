@@ -2,7 +2,7 @@ import re
 
 from typing import List
 
-from fastapi import status, HTTPException
+from fastapi import status
 from qdrant_client.async_qdrant_client import AsyncQdrantClient
 from qdrant_client.http.exceptions import UnexpectedResponse
 from qdrant_client.conversions import common_types
@@ -14,6 +14,8 @@ from ..models import EmbeddingRead, EmbeddingPagination, EmbeddingCreateMulti, E
 
 from embeddings.app.lib.cloudflare.api import API, DIMENSIONALITY_PRESETS
 from embeddings.app.embeddings.utils import source_key
+from embeddings.app.embeddings.utils import merge_metadata
+from embeddings.exceptions import NotFoundException, UnknownThirdPartyException, EmbeddingDimensionalityException
 
 from embeddings.app.lib.cloudflare.models import CreateDatabaseRecord
 
@@ -37,7 +39,6 @@ async def embedding(client: AsyncQdrantClient, namespace: str, embedding_id: str
             with_vectors=True,
             with_payload=True
         )
-
         return EmbeddingRead(
             id=result[0].id,
             payload=result[0].payload,
@@ -46,9 +47,12 @@ async def embedding(client: AsyncQdrantClient, namespace: str, embedding_id: str
         )
     except UnexpectedResponse as ex:
         if ex.status_code == status.HTTP_404_NOT_FOUND:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=[{"msg": ex.content.decode('utf-8')}]
+            raise NotFoundException(
+                ex.content.decode('utf-8')
+            )
+        else:
+            raise UnknownThirdPartyException(
+                ex.content.decode('utf-8')
             )
 
 
@@ -80,9 +84,8 @@ async def collection_exists(client: AsyncQdrantClient, namespace: str) -> bool:
 async def create(client: AsyncQdrantClient, namespace: str, data_in: EmbeddingCreateMulti) -> InsertionResult:
     exists = await collection_exists(client, namespace)
     if not exists and not data_in.create_namespace:
-        raise HTTPException(
-            status_code=404,
-            detail=[{"msg": f"Collection with name {namespace} does not exist"}]
+        raise NotFoundException(
+            f"Collection with name {namespace} does not exist"
         )
 
     if not exists:
@@ -118,13 +121,12 @@ async def insert(
             points=[common_types.PointStruct(**{
                 "vector": vector,
                 "id": meta.id,
-                "payload": meta.payload
+                "payload": merge_metadata(meta.payload, meta.text) if meta.persist_original else meta.payload
             }) for vector, meta in zip(result.get('data', []), data_in.inputs)]
         )
         if upsert_result.status != UpdateStatus.COMPLETED:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=[{"msg": "Error occurred whilst attempting to upsert data in Qdrant"}]
+            raise UnknownThirdPartyException(
+                "Error occurred whilst attempting to upsert data in Qdrant"
             )
     except UnexpectedResponse as ex:
         if ex.status_code == status.HTTP_400_BAD_REQUEST:
@@ -133,14 +135,11 @@ async def insert(
                 expected_dimension = int(expected_dimension_error.group(1))
                 received_dimension = int(expected_dimension_error.group(2))
                 compatible_model_names = ','.join([str(o) for o in DIMENSIONALITY_PRESETS.get(expected_dimension, [])])
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=[{
-                        "msg": f"The embedding model's dimensionality: {received_dimension} "
-                               f"(defaults to {data_in.embedding_model}) is not compatible with the "
-                               f"dimensionality of the namespace '{namespace}', dimensionality: {expected_dimension}. "
-                               f"Please provide one of the following compatible models: {compatible_model_names}",
-                    }]
+                raise EmbeddingDimensionalityException(
+                    f"The embedding model's dimensionality: {received_dimension} "
+                    f"(defaults to {data_in.embedding_model}) is not compatible with the "
+                    f"dimensionality of the namespace '{namespace}', dimensionality: {expected_dimension}. "
+                    f"Please provide one of the following compatible models: {compatible_model_names}",
                 )
 
         raise ex
@@ -155,9 +154,8 @@ async def insert(
         records=insertion_records
     )
     if not insertion_result.get('success'):
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=[{"msg": "Something went wrong whilst attempting to persist the source text to Cloudflare D1"}]
+        raise UnknownThirdPartyException(
+            "Something went wrong whilst attempting to persist the source text to Cloudflare D1"
         )
 
     items = [EmbeddingRead(id=o.vector_id) for o in insertion_records]

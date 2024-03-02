@@ -119,32 +119,32 @@ def query(namespace: str, inputs: str):
 
 
 def run():
-    res = delete_embedding(
-        namespace=NAMESPACE_NAME,
-        embedding_id="1e24a2fa-e228-4699-a283-fd85142692a6"
-    )
-    exit()
-    res = list_namespaces()
-    print(("list_namespaces.res", res))
-    exit()
-    list_embeddings(NAMESPACE_NAME)
-    exit()
-    insertion_text = ["sample text"]
-    res = create_embedding(namespace=NAMESPACE_NAME, text=insertion_text[0])
-    print(("cloudflare.embedding.create", res))
-    exit()
-
-    res = query(namespace=NAMESPACE_NAME, inputs="abc")
-    print(("cloudflare.query.res", res, res.json()))
-
-    exit()
-
-    res = delete_embedding(
-        namespace=NAMESPACE_NAME,
-        embedding_id="1e24a2fa-e228-4699-a283-fd85142692a6"
-    )
-    print(("res", res))
-    exit()
+    # res = delete_embedding(
+    #     namespace=NAMESPACE_NAME,
+    #     embedding_id="1e24a2fa-e228-4699-a283-fd85142692a6"
+    # )
+    # exit()
+    # res = list_namespaces()
+    # print(("list_namespaces.res", res))
+    # exit()
+    # list_embeddings(NAMESPACE_NAME)
+    # exit()
+    # insertion_text = ["sample text"]
+    # res = create_embedding(namespace=NAMESPACE_NAME, text=insertion_text[0])
+    # print(("cloudflare.embedding.create", res))
+    # exit()
+    #
+    # res = query(namespace=NAMESPACE_NAME, inputs="abc")
+    # print(("cloudflare.query.res", res, res.json()))
+    #
+    # exit()
+    #
+    # res = delete_embedding(
+    #     namespace=NAMESPACE_NAME,
+    #     embedding_id="1e24a2fa-e228-4699-a283-fd85142692a6"
+    # )
+    # print(("res", res))
+    # exit()
     res = get_embedding(
         namespace=NAMESPACE_NAME,
         embedding_id="05b1c99e-e947-4e4d-8fc6-5e84947a338d"

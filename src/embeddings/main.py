@@ -1,15 +1,59 @@
-from fastapi import HTTPException, status
+from fastapi import status, Request
 
 from fastapi.responses import JSONResponse
 
-from fastapi import Request
-
 from embeddings.app.factory import create_app
 from embeddings.app.config import settings
+from embeddings.exceptions import (
+    NotFoundException,
+    UnknownThirdPartyException,
+    EmbeddingDimensionalityException,
+    EnvironmentVariableConfigException
+)
 
 from fastapi.security.utils import get_authorization_scheme_param
 
 app = create_app()
+
+
+@app.exception_handler(UnknownThirdPartyException)
+async def unknown_third_party_exception(request: Request, exc: UnknownThirdPartyException):
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={
+            "msg": str(exc)
+        }
+    )
+
+
+@app.exception_handler(EmbeddingDimensionalityException)
+async def embedding_dimensionality_exception(request: Request, exc: EmbeddingDimensionalityException):
+    return JSONResponse(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        content={
+            "msg": str(exc)
+        }
+    )
+
+
+@app.exception_handler(NotFoundException)
+async def not_found_exception_handler(request: Request, exc: NotFoundException):
+    return JSONResponse(
+        status_code=status.HTTP_404_NOT_FOUND,
+        content={
+            "msg": str(exc)
+        }
+    )
+
+
+@app.exception_handler(EnvironmentVariableConfigException)
+async def environment_variable_config_exception_handle(request: Request, exc: EnvironmentVariableConfigException):
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={
+            "msg": str(exc)
+        }
+    )
 
 
 @app.middleware("http")

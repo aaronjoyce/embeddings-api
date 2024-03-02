@@ -1,5 +1,4 @@
 from fastapi import status
-from fastapi import HTTPException
 
 from embeddings.app.lib.cloudflare.api import API, CloudflareEmbeddingModels
 
@@ -11,6 +10,8 @@ from qdrant_client.http.models import VectorParams
 from embeddings.app.config import settings
 from embeddings.app.deps.request_params import CommonParams
 
+from embeddings.exceptions import NotFoundException, UnknownThirdPartyException
+
 from embeddings.app.document.models import DocumentRead, DocumentPagination
 
 from .models import NamespaceRead
@@ -20,14 +21,12 @@ from .models import NamespaceDelete
 from ..models import NamespaceQuery, NamespacePagination
 
 
-async def namespaces() -> NamespacePagination:
-    client = AsyncQdrantClient(host=settings.QDRANT_HOST)
+async def namespaces(client: AsyncQdrantClient) -> NamespacePagination:
     try:
         result = await client.get_collections()
     except UnexpectedResponse as ex:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=[{"msg": ex.content.decode('utf-8')}]
+        raise UnknownThirdPartyException(
+            ex.content.decode('utf-8')
         )
 
     return NamespacePagination(
@@ -40,22 +39,20 @@ async def namespaces() -> NamespacePagination:
     )
 
 
-async def namespace(name: str) -> NamespaceRead:
-    client = AsyncQdrantClient(host=settings.QDRANT_HOST)
+async def namespace(name: str, client: AsyncQdrantClient) -> NamespaceRead:
     try:
         result = await client.get_collection(
             collection_name=name
         )
     except UnexpectedResponse as ex:
+        print(("namespace.data", str(ex)))
         if ex.status_code == status.HTTP_404_NOT_FOUND:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=[{"msg": f"Collection with name {namespace} not found"}]
+            raise NotFoundException(
+                str(f"Collection with name {namespace} not found")
             )
 
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=[{"msg": ex.content.decode('utf-8')}]
+        raise UnknownThirdPartyException(
+            ex.content.decode('utf-8')
         )
 
     data = {
@@ -74,31 +71,34 @@ async def namespace(name: str) -> NamespaceRead:
     )
 
 
-async def create(data_in: NamespaceCreate) -> NamespaceRead:
-    client = AsyncQdrantClient(host=settings.QDRANT_HOST)
-    result = await client.create_collection(
-        collection_name=data_in.name,
-        vectors_config=VectorParams(size=data_in.dimensionality, distance=data_in.distance),
-    )
-    return await namespace(name=data_in.name)
+async def create(data_in: NamespaceCreate, client: AsyncQdrantClient) -> NamespaceRead:
+    try:
+        result = await client.create_collection(
+            collection_name=data_in.name,
+            vectors_config=VectorParams(size=data_in.dimensionality, distance=data_in.distance),
+            timeout=10
+        )
+        print(("result", result))
+        return await namespace(name=data_in.name, client=client)
+    except Exception as ex:
+        raise UnknownThirdPartyException(
+            str(ex)
+        )
 
 
-async def delete(name: str) -> NamespaceDelete:
-    client = AsyncQdrantClient(host=settings.QDRANT_HOST, port=settings.QDRANT_HTTP_PORT)
+async def delete(name: str, client: AsyncQdrantClient) -> NamespaceDelete:
     try:
         deletion_res = await client.delete_collection(
             collection_name=name
         )
     except UnexpectedResponse as ex:
         if ex.status_code == status.HTTP_404_NOT_FOUND:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=[{"msg": f"The namespace {namespace} you provided does not exist"}]
+            raise NotFoundException(
+                f"The namespace {namespace} you provided does not exist"
             )
 
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=[{"msg": ex.content.decode('utf-8')}]
+        raise UnknownThirdPartyException(
+            ex.content.decode('utf-8')
         )
 
     return NamespaceDelete(

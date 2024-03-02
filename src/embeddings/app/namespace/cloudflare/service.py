@@ -2,23 +2,18 @@ import CloudFlare
 
 from typing import List, Dict, Any
 
-from fastapi import HTTPException
-from fastapi import status
-
-from embeddings.app.lib.cloudflare.api import API
-
 from .models import NamespaceCreate, NamespaceRead, NamespaceDelete
 from ..models import NamespaceQuery, NamespacePagination, NamespaceBaseModel
 
+from embeddings.app.lib.cloudflare.api import API
 from embeddings.app.embeddings.utils import source_key
-
 from embeddings.app.document.models import DocumentRead, DocumentPagination
-
 from embeddings.app.lib.cloudflare.api import CloudflareEmbeddingModels, ERROR_CODE_VECTOR_INDEX_NOT_FOUND
 
 from embeddings.app.config import settings
 
 from embeddings.app.deps.request_params import CommonParams
+from embeddings.exceptions import NotFoundException, UnknownThirdPartyException
 
 
 def create(client: API, data_in: NamespaceCreate) -> NamespaceRead:
@@ -59,18 +54,15 @@ def vectors_by_ids(client: API, namespace: str, ids: List[str]) -> List[Dict[str
         vector_ids=ids
     )
     if not query_result:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+        raise NotFoundException(
+            f"Cloudflare vectors with ids {ids} not found in the '{namespace}' vectorize index."
         )
 
     results = query_result[0].get('results', [])
     if len(results) != len(ids):
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail={
-                "msg": f"Inconsistent state between the number of results returned from Vectorize and D1. "
-                       f"Got {len(results)} results from D1, expected {len(ids)}."
-            }
+        not_found_ids = set(ids) - set(o.get("id") for o in results)
+        raise NotFoundException(
+            f"Cloudflare vectors with ids {not_found_ids} not found in the '{namespace}' vectorize index."
         )
 
     return results
@@ -108,7 +100,7 @@ def vector_indexes(client: API) -> NamespacePagination:
             itemsPerPage=len(res)
         )
     except CloudFlare.exceptions.CloudFlareAPIError as ex:
-        pass
+        raise UnknownThirdPartyException(str(ex))
 
 
 def vector_index_by_name(client: API, namespace: str, ) -> NamespaceRead:
@@ -118,17 +110,11 @@ def vector_index_by_name(client: API, namespace: str, ) -> NamespaceRead:
         )
     except CloudFlare.exceptions.CloudFlareAPIError as ex:
         if int(ex) == ERROR_CODE_VECTOR_INDEX_NOT_FOUND:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=[{
-                    "msg": f"Vector index with name '{namespace}' not found."
-                }]
+            raise NotFoundException(
+                f"Vector index with name '{namespace}' not found."
             )
         else:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=[{"msg": str(ex)}]
-            )
+            raise NotFoundException(str(ex))
 
     return NamespaceRead(
         name=res.get('name'),
@@ -144,9 +130,8 @@ def delete_vector_index_by_name(client: API, namespace: str) -> NamespaceDelete:
         )
         # also need to check whether there's a corresponding table in d1
     except CloudFlare.exceptions.CloudFlareAPIError as ex:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=[{"msg": str(ex)}]
+        raise UnknownThirdPartyException(
+            str(ex)
         )
 
     return NamespaceDelete(
