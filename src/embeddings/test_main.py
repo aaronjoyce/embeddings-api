@@ -407,11 +407,7 @@ class TestCloudflareEmbeddingQuery(TestBase):
             namespace=namespace,
             text=EMBEDDING_TEXT,
         )
-        try:
-            assert response.status_code == status.HTTP_200_OK
-        except Exception as ex:
-            raise Exception(response.text)
-
+        assert response.status_code == status.HTTP_200_OK
         assert any([o.get("id") == self.embedding_id for o in response.json().get('items', [])])
 
     def test_query_metadata_filter_match(self):
@@ -423,11 +419,7 @@ class TestCloudflareEmbeddingQuery(TestBase):
                 "a": 1
             }
         )
-        try:
-            assert response.status_code == status.HTTP_200_OK
-        except Exception as ex:
-            raise Exception(response.text)
-
+        assert response.status_code == status.HTTP_200_OK
         assert any([o.get("id") == self.embedding_id for o in response.json().get('items', [])])
 
     def test_query_metadata_filter_not_match(self):
@@ -439,11 +431,7 @@ class TestCloudflareEmbeddingQuery(TestBase):
                 "a": 2
             }
         )
-        try:
-            assert response.status_code == status.HTTP_200_OK
-        except Exception as ex:
-            raise Exception(response.text)
-
+        assert response.status_code == status.HTTP_200_OK
         assert not any([o.get("id") == self.embedding_id for o in response.json().get('items', [])])
 
 
