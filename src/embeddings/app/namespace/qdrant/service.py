@@ -45,7 +45,6 @@ async def namespace(name: str, client: AsyncQdrantClient) -> NamespaceRead:
             collection_name=name
         )
     except UnexpectedResponse as ex:
-        print(("namespace.data", str(ex)))
         if ex.status_code == status.HTTP_404_NOT_FOUND:
             raise NotFoundException(
                 str(f"Collection with name {namespace} not found")
@@ -76,9 +75,7 @@ async def create(data_in: NamespaceCreate, client: AsyncQdrantClient) -> Namespa
         result = await client.create_collection(
             collection_name=data_in.name,
             vectors_config=VectorParams(size=data_in.dimensionality, distance=data_in.distance),
-            timeout=10
         )
-        print(("result", result))
         return await namespace(name=data_in.name, client=client)
     except Exception as ex:
         raise UnknownThirdPartyException(
