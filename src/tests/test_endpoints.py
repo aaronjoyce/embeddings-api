@@ -227,7 +227,7 @@ class TestCloudflareEmbedding(TestBase):
         )
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
-        response_error_message = response.json().get("msg")
+        response_error_message = response.json().get("detail")
         assert bool(re.match(r"vector index with name", response_error_message.lower()))
 
     def test_create_payload(self):
@@ -556,7 +556,7 @@ class TestQdrantEmbedding(TestQdrantBase):
         )
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
-        response_error_message = response.json().get("msg")
+        response_error_message = response.json().get("detail")
         assert bool(re.match(r"collection with name", response_error_message.lower()))
 
     def test_create_payload(self):
