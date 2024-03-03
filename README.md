@@ -3,8 +3,6 @@
 
 
 ## Features
-- **Distributed**
-- **Scalable**
 - **Simple endpoints with basic validation**
 - **Basic authentication**
 - **Support for vector paging when using Cloudflare Vectorize with D1**
