@@ -10,7 +10,8 @@ from app.config import settings
 def qdrant_api_client():
     yield AsyncQdrantClient(
         host=settings.QDRANT_HOST,
-        port=settings.QDRANT_HTTP_PORT
+        port=settings.QDRANT_HTTP_PORT,
+        grpc_port=settings.QDRANT_GRPC_PORT
     )
 
 

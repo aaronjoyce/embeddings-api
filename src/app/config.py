@@ -18,13 +18,16 @@ class Settings(BaseSettings):
     # Qdrant
     QDRANT_HOST: str
     QDRANT_HTTP_PORT: int
-    QDRANT_GRPC_PORT: int
+    QDRANT_GRPC_PORT: Optional[int] = 6334
 
     # Optional authentication
     ADMIN_SECRET_KEY: Optional[str] = None
 
     # Optional namespace key
     NAMESPACE: Optional[str] = "synapse"
+
+    API_HOST: Optional[str] = "0.0.0.0"
+    API_PORT: Optional[int] = 8000
 
 
 settings = Settings()

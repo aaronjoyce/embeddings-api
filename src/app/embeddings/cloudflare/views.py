@@ -85,9 +85,11 @@ async def delete_embedding(namespace: str, embedding_id: str, client: Cloudflare
 async def create_embedding(namespace: str, data_in: EmbeddingCreateMulti, client: CloudflareClient):
     """
     Generate and persist embeddings for one or more text items.
+
     If a valid `CLOUDFLARE_D1_DATABASE_IDENTIFIER` environment variable has been set,
     the embedding identifier, along with the original embedded text, will be persisted
     to the Cloudflare D1 service.
+
     Persisting to Cloudflare D1 enables API support for paging through embeddings, i.e.,
     `/embeddings/cloudflare/{namespace}`. This is because the Cloudflare the Vectorize
     service does not natively support paging/scrolling through vectors at this time.
