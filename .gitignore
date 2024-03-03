@@ -20,3 +20,5 @@ venv/
 
 ### Local scripts ###
 src/app/scripts
+cf.py
+roles.py
