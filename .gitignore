@@ -17,3 +17,6 @@ venv/
 
 # Misc
 .idea
+
+### Local scripts ###
+src/app/scripts
