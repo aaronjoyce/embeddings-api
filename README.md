@@ -28,4 +28,4 @@ data volume. Click [here](https://developers.cloudflare.com/d1/platform/limits) 
 Retrieves a specific vector from the Cloudflare namespace for with a given `id`.
 
 ### `POST /api/v1/embeddings/cloudflare/{namespace}`
-Create and persist an embedding vector using Cloudflare Workers AI (text embedding models)[https://developers.cloudflare.com/workers-ai/models/#text-embeddings].
+Create and persist an embedding vector using Cloudflare Workers AI [text embedding models](https://developers.cloudflare.com/workers-ai/models/#text-embeddings).
