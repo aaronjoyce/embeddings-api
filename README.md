@@ -1,4 +1,4 @@
-<h1>Embeddings API</h1>
+<h1>FastAPI Embeddings API</h1>
 <h3>Vector Embedding & Database API utilizing Cloudflare Workers AI, Vectorize or Qdrant, and Cloudflare D1 (optional)</h3>
 
 
